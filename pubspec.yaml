@@ -1,4 +1,4 @@
-name: prism
+name: Prism
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -56,6 +56,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -98,3 +99,23 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/appicon.png"
+  adaptive_icon_background: "#00000000"
+  adaptive_icon_foreground: "assets/appicon.png"
+  remove_alpha_ios: false
+  web:
+    generate: true
+    image_path: "assets/appicon.png"
+    background_color: "#00000000"
+    theme_color: "#00000000"
+  windows:
+    generate: true
+    image_path: "assets/appicon.png"
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: "assets/appicon.png"

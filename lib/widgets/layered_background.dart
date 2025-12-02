@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'weather_cutout.dart';
+import 'parallax_scenery.dart';
 
 class LayeredBackground extends StatelessWidget {
   const LayeredBackground({super.key});
@@ -26,7 +27,7 @@ class LayeredBackground extends StatelessWidget {
 
         // 2. Far Clouds (Slower animation, smaller)
         Positioned(
-          top: 100,
+          top: 80,
           left: -50,
           child: _buildCloud(100, 0.6)
               .animate(onPlay: (controller) => controller.repeat(reverse: true))
@@ -38,37 +39,34 @@ class LayeredBackground extends StatelessWidget {
               ),
         ),
 
-        // 3. Sun (Rotating)
+        // 3. Sun (Static)
         Positioned(
           top: 60,
           right: 40,
-          child:
-              Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFFD700).withOpacity(0.6),
-                          blurRadius: 40,
-                          spreadRadius: 10,
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate(onPlay: (controller) => controller.repeat())
-                  .rotate(duration: 20.seconds),
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFFD700).withOpacity(0.6),
+                  blurRadius: 40,
+                  spreadRadius: 10,
+                ),
+              ],
+            ),
+          ),
         ),
 
         // 4. Middle Clouds
         Positioned(
-          top: 180,
+          top: 280,
           right: -30,
           child: _buildCloud(140, 0.8)
               .animate(onPlay: (controller) => controller.repeat(reverse: true))
@@ -80,27 +78,12 @@ class LayeredBackground extends StatelessWidget {
               ),
         ),
 
-        // 5. Foreground Hills (The "Stage")
-        Positioned(
+        // 5. Parallax Scenery (Vectorised 3D Layers)
+        const Positioned(
           bottom: 0,
           left: 0,
           right: 0,
-          height: 350,
-          child:
-              WeatherCutout(
-                color: const Color(0xFFE0E5EC), // Clay color
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(60),
-                  topRight: Radius.circular(60),
-                ),
-                depth: 40, // Deep shadow for the main stage
-                child: Container(), // Content will go here
-              ).animate().slideY(
-                begin: 1.0,
-                end: 0,
-                duration: 800.ms,
-                curve: Curves.easeOutCubic,
-              ),
+          child: ParallaxScenery(height: 350),
         ),
       ],
     );
