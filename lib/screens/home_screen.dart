@@ -26,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _locationName;
   bool _isLoading = true;
   String _errorMessage = '';
+  bool _isCelsius = true;
 
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
@@ -149,8 +150,17 @@ class _HomeScreenState extends State<HomeScreen> {
       resizeToAvoidBottomInset: false, // Prevent keyboard push
       body: Stack(
         children: [
-          // 1. Background
-          const LayeredBackground(),
+          // 1. Background with dynamic day/night based on selected city
+          LayeredBackground(
+            sunrise: _weather?.sunrise,
+            sunset: _weather?.sunset,
+            currentTime: _weather?.localTime,
+            weatherCondition: _weather?.condition,
+            conditionCode: _weather?.conditionCode,
+            temperature: _weather?.temperature,
+            humidity: _weather?.humidity.toDouble(),
+            windSpeed: _weather?.windSpeed,
+          ),
 
           if (_isLoading)
             const Center(child: CircularProgressIndicator(color: Colors.white))
@@ -283,6 +293,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
+                    // Menu Pill (Top Right) - Three dots
+                    Positioned(
+                      top: 50,
+                      right: 20,
+                      child: GestureDetector(
+                        onTap: () => _showSettingsSheet(context),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.more_horiz,
+                                color: Colors.white.withOpacity(0.8),
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
                     // 6. Animated Weather Hero (Temp Only) - On Top
                     // We move this from center to top-left
                     Positioned(
@@ -332,10 +373,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ),
                                       Text(
-                                        _weather?.temperature
-                                                .round()
-                                                .toString() ??
-                                            '--',
+                                        _weather != null
+                                            ? _formatTemperature(
+                                                _weather!.temperature,
+                                              )
+                                            : '--',
                                         style: currentStyle,
                                       ),
                                       Text('°', style: currentStyle),
@@ -373,5 +415,569 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  void _showSettingsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(30),
+                ),
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag Handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Title
+                  Text(
+                    'Settings',
+                    style: GoogleFonts.outfit(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Temperature Unit Toggle
+                  _buildSettingsTile(
+                    icon: Icons.thermostat,
+                    title: 'Temperature Unit',
+                    trailing: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              setSheetState(() {});
+                              setState(() => _isCelsius = true);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _isCelsius
+                                    ? Colors.white.withOpacity(0.2)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '°C',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontWeight: _isCelsius
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              setSheetState(() {});
+                              setState(() => _isCelsius = false);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: !_isCelsius
+                                    ? Colors.white.withOpacity(0.2)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '°F',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontWeight: !_isCelsius
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Manual Location Search
+                  _buildSettingsTile(
+                    icon: Icons.search,
+                    title: 'Search Location',
+                    subtitle: 'Find weather for any city',
+                    trailing: Icon(
+                      Icons.chevron_right,
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showLocationSearch(context);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Current Location
+                  _buildSettingsTile(
+                    icon: Icons.my_location,
+                    title: 'Use Current Location',
+                    subtitle: 'Get weather for your location',
+                    trailing: Icon(
+                      Icons.chevron_right,
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _fetchWeather();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Developer Info
+                  _buildSettingsTile(
+                    icon: Icons.code,
+                    title: 'Developer',
+                    subtitle: 'Bhanu',
+                  ),
+                  const SizedBox(height: 16),
+
+                  // App Version
+                  _buildSettingsTile(
+                    icon: Icons.info_outline,
+                    title: 'App Version',
+                    subtitle: 'v1.0.0',
+                  ),
+
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.white.withOpacity(0.8), size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 14,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (trailing != null) trailing,
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLocationSearch(BuildContext context) {
+    final searchController = TextEditingController();
+    List<CityResult> suggestions = [];
+    bool isSearching = false;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.7,
+                ),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(30),
+                  ),
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Drag Handle
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    Text(
+                      'Search Location',
+                      style: GoogleFonts.outfit(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Search Field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                        ),
+                      ),
+                      child: TextField(
+                        controller: searchController,
+                        style: GoogleFonts.outfit(color: Colors.white),
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: 'Enter city name...',
+                          hintStyle: GoogleFonts.outfit(
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: Colors.white.withOpacity(0.6),
+                          ),
+                          suffixIcon: isSearching
+                              ? Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white.withOpacity(0.6),
+                                    ),
+                                  ),
+                                )
+                              : searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.clear,
+                                    color: Colors.white.withOpacity(0.6),
+                                  ),
+                                  onPressed: () {
+                                    searchController.clear();
+                                    setSheetState(() {
+                                      suggestions = [];
+                                    });
+                                  },
+                                )
+                              : null,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.all(16),
+                        ),
+                        onChanged: (value) async {
+                          if (value.length >= 2) {
+                            setSheetState(() => isSearching = true);
+                            try {
+                              final results = await _weatherService
+                                  .searchCities(value);
+                              setSheetState(() {
+                                suggestions = results;
+                                isSearching = false;
+                              });
+                            } catch (e) {
+                              setSheetState(() => isSearching = false);
+                            }
+                          } else {
+                            setSheetState(() {
+                              suggestions = [];
+                            });
+                          }
+                        },
+                        onSubmitted: (value) {
+                          if (suggestions.isNotEmpty) {
+                            _selectCity(suggestions.first);
+                            Navigator.pop(context);
+                          } else if (value.isNotEmpty) {
+                            Navigator.pop(context);
+                            _searchAndSetLocation(value);
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Search Results
+                    if (suggestions.isNotEmpty)
+                      Flexible(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: suggestions.length,
+                          itemBuilder: (context, index) {
+                            final city = suggestions[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                                _selectCity(city);
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.1),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.location_on_outlined,
+                                      color: Colors.white.withOpacity(0.6),
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            city.name,
+                                            style: GoogleFonts.outfit(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          if (city.state != null ||
+                                              city.country.isNotEmpty)
+                                            Text(
+                                              [
+                                                if (city.state != null)
+                                                  city.state,
+                                                city.country,
+                                              ].join(', '),
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.white.withOpacity(
+                                                  0.5,
+                                                ),
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      color: Colors.white.withOpacity(0.3),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                    // Empty state
+                    if (suggestions.isEmpty &&
+                        searchController.text.length >= 2 &&
+                        !isSearching)
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              color: Colors.white.withOpacity(0.3),
+                              size: 48,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No cities found',
+                              style: GoogleFonts.outfit(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    SizedBox(
+                      height: MediaQuery.of(context).padding.bottom + 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectCity(CityResult city) async {
+    setState(() => _isLoading = true);
+
+    try {
+      final results = await Future.wait([
+        _weatherService.getWeatherByCoordinates(city.lat, city.lon),
+        _weatherService.getForecast(city.lat, city.lon),
+      ]);
+
+      final weather = results[0] as Weather;
+      final forecast = results[1] as ForecastData;
+
+      setState(() {
+        _weather = weather;
+        _forecastData = forecast;
+        _locationName = city.name;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load weather';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _searchAndSetLocation(String query) async {
+    setState(() => _isLoading = true);
+
+    try {
+      // Use geocoding to find the location
+      List<Location> locations = await locationFromAddress(query);
+      if (locations.isNotEmpty) {
+        final location = locations.first;
+
+        // Fetch weather for this location
+        final results = await Future.wait([
+          _weatherService.getWeatherByCoordinates(
+            location.latitude,
+            location.longitude,
+          ),
+          _weatherService.getForecast(location.latitude, location.longitude),
+        ]);
+
+        final weather = results[0] as Weather;
+        final forecast = results[1] as ForecastData;
+
+        setState(() {
+          _weather = weather;
+          _forecastData = forecast;
+          _locationName = query;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Location not found';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to find location';
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatTemperature(double celsius) {
+    if (_isCelsius) {
+      return '${celsius.round()}';
+    } else {
+      return '${((celsius * 9 / 5) + 32).round()}';
+    }
   }
 }

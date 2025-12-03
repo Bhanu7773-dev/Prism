@@ -46,4 +46,56 @@ class WeatherService {
       throw Exception('Failed to load forecast data');
     }
   }
+
+  /// Search for city suggestions using OpenWeatherMap Geo API
+  Future<List<CityResult>> searchCities(String query) async {
+    if (query.trim().isEmpty) return [];
+
+    final response = await http.get(
+      Uri.parse(
+        'https://api.openweathermap.org/geo/1.0/direct?q=$query&limit=5&appid=$_apiKey',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => CityResult.fromJson(json)).toList();
+    } else {
+      return [];
+    }
+  }
+}
+
+/// Model for city search results
+class CityResult {
+  final String name;
+  final String? state;
+  final String country;
+  final double lat;
+  final double lon;
+
+  CityResult({
+    required this.name,
+    this.state,
+    required this.country,
+    required this.lat,
+    required this.lon,
+  });
+
+  factory CityResult.fromJson(Map<String, dynamic> json) {
+    return CityResult(
+      name: json['name'] ?? '',
+      state: json['state'],
+      country: json['country'] ?? '',
+      lat: (json['lat'] as num).toDouble(),
+      lon: (json['lon'] as num).toDouble(),
+    );
+  }
+
+  String get displayName {
+    if (state != null && state!.isNotEmpty) {
+      return '$name, $state, $country';
+    }
+    return '$name, $country';
+  }
 }

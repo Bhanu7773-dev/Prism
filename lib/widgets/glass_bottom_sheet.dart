@@ -42,67 +42,221 @@ class GlassBottomSheet extends StatelessWidget {
       snap: true,
       snapAnimationDuration: const Duration(milliseconds: 300),
       builder: (context, scrollController) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(40),
-                ),
-                border: Border(
-                  top: BorderSide(
-                    color: Colors.white.withOpacity(0.2),
-                    width: 1.5,
+        return RepaintBoundary(
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(40),
+                  ),
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withOpacity(0.15),
+                      Colors.white.withOpacity(0.05),
+                    ],
                   ),
                 ),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withOpacity(0.15),
-                    Colors.white.withOpacity(0.05),
-                  ],
-                ),
-              ),
-              child: SingleChildScrollView(
-                controller: scrollController,
-                physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Drag Handle
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(2),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Drag Handle
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                      // Hourly Forecast Title
-                      Text(
-                        "Hourly Forecast",
-                        style: GoogleFonts.outfit(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white.withOpacity(0.9),
+                        // Hourly Forecast Title
+                        Text(
+                          "Hourly Forecast",
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                      // Hourly Forecast List
-                      SizedBox(
-                        height: 100,
-                        child: hourlyForecast.isEmpty
+                        // Hourly Forecast List
+                        SizedBox(
+                          height: 100,
+                          child: hourlyForecast.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    "Loading...",
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: hourlyForecast.length,
+                                  itemBuilder: (context, index) {
+                                    final item = hourlyForecast[index];
+                                    final time = DateFormat(
+                                      'h a',
+                                    ).format(item.dateTime);
+                                    return Container(
+                                      width: 70,
+                                      margin: const EdgeInsets.only(right: 12),
+                                      decoration: BoxDecoration(
+                                        color: index == 0
+                                            ? Colors.white.withOpacity(0.2)
+                                            : Colors.white.withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.1),
+                                        ),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            time,
+                                            style: GoogleFonts.outfit(
+                                              color: Colors.white.withOpacity(
+                                                0.7,
+                                              ),
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          CutoutIcon(
+                                            icon: _getIcon(item.condition),
+                                            color: Colors.white.withOpacity(
+                                              0.8,
+                                            ),
+                                            size: 24,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            "${item.temperature.round()}°",
+                                            style: GoogleFonts.outfit(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Weather Details Grid
+                        if (currentWeather != null) ...[
+                          Text(
+                            "Details",
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final itemWidth = (constraints.maxWidth - 24) / 3;
+                              return Wrap(
+                                spacing: 12,
+                                runSpacing: 12,
+                                children: [
+                                  _buildDetailItem(
+                                    "Feels Like",
+                                    "${currentWeather!.feelsLike.round()}°",
+                                    Icons.thermostat,
+                                    itemWidth,
+                                  ),
+                                  _buildDetailItem(
+                                    "Humidity",
+                                    "${currentWeather!.humidity}%",
+                                    Icons.water_drop,
+                                    itemWidth,
+                                  ),
+                                  _buildDetailItem(
+                                    "Wind",
+                                    "${currentWeather!.windSpeed} m/s",
+                                    Icons.air,
+                                    itemWidth,
+                                  ),
+                                  _buildDetailItem(
+                                    "Pressure",
+                                    "${currentWeather!.pressure} hPa",
+                                    Icons.speed,
+                                    itemWidth,
+                                  ),
+                                  _buildDetailItem(
+                                    "Visibility",
+                                    "${(currentWeather!.visibility / 1000).toStringAsFixed(1)} km",
+                                    Icons.visibility,
+                                    itemWidth,
+                                  ),
+                                  _buildDetailItem(
+                                    "Sunset",
+                                    DateFormat(
+                                      'h:mm a',
+                                    ).format(currentWeather!.sunset),
+                                    Icons.wb_twilight,
+                                    itemWidth,
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Sun/Moon Path Graph
+                          CelestialPathGraph(
+                            sunrise: currentWeather!.sunrise,
+                            sunset: currentWeather!.sunset,
+                            currentTime: currentWeather!.localTime,
+                            timezoneOffset: currentWeather!.timezoneOffset,
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+
+                        // Daily Forecast Title
+                        Text(
+                          "5-Day Forecast",
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Daily Forecast List
+                        dailyForecast.isEmpty
                             ? Center(
                                 child: Text(
                                   "Loading...",
@@ -112,52 +266,63 @@ class GlassBottomSheet extends StatelessWidget {
                                 ),
                               )
                             : ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                physics: const BouncingScrollPhysics(),
-                                itemCount: hourlyForecast.length,
+                                physics: const NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemCount: dailyForecast.length,
                                 itemBuilder: (context, index) {
-                                  final item = hourlyForecast[index];
-                                  final time = DateFormat(
-                                    'h a',
+                                  final item = dailyForecast[index];
+                                  final day = DateFormat(
+                                    'EEEE',
                                   ).format(item.dateTime);
-                                  return Container(
-                                    width: 70,
-                                    margin: const EdgeInsets.only(right: 12),
-                                    decoration: BoxDecoration(
-                                      color: index == 0
-                                          ? Colors.white.withOpacity(0.2)
-                                          : Colors.white.withOpacity(0.05),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: Colors.white.withOpacity(0.1),
-                                      ),
-                                    ),
-                                    child: Column(
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: Row(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          time,
-                                          style: GoogleFonts.outfit(
-                                            color: Colors.white.withOpacity(
-                                              0.7,
+                                        SizedBox(
+                                          width: 100,
+                                          child: Text(
+                                            day,
+                                            style: GoogleFonts.outfit(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
                                             ),
-                                            fontSize: 12,
                                           ),
                                         ),
-                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            CutoutIcon(
+                                              icon: Icons.water_drop,
+                                              size: 12,
+                                              color: Colors.blue[200]!,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              "${item.humidity}%",
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.blue[200],
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                         CutoutIcon(
                                           icon: _getIcon(item.condition),
                                           color: Colors.white.withOpacity(0.8),
                                           size: 24,
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          "${item.temperature.round()}°",
-                                          style: GoogleFonts.outfit(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                                        SizedBox(
+                                          width: 50,
+                                          child: Text(
+                                            "${item.temperature.round()}°",
+                                            textAlign: TextAlign.end,
+                                            style: GoogleFonts.outfit(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -165,168 +330,10 @@ class GlassBottomSheet extends StatelessWidget {
                                   );
                                 },
                               ),
-                      ),
 
-                      const SizedBox(height: 32),
-
-                      // Weather Details Grid
-                      if (currentWeather != null) ...[
-                        Text(
-                          "Details",
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final itemWidth = (constraints.maxWidth - 24) / 3;
-                            return Wrap(
-                              spacing: 12,
-                              runSpacing: 12,
-                              children: [
-                                _buildDetailItem(
-                                  "Feels Like",
-                                  "${currentWeather!.feelsLike.round()}°",
-                                  Icons.thermostat,
-                                  itemWidth,
-                                ),
-                                _buildDetailItem(
-                                  "Humidity",
-                                  "${currentWeather!.humidity}%",
-                                  Icons.water_drop,
-                                  itemWidth,
-                                ),
-                                _buildDetailItem(
-                                  "Wind",
-                                  "${currentWeather!.windSpeed} m/s",
-                                  Icons.air,
-                                  itemWidth,
-                                ),
-                                _buildDetailItem(
-                                  "Pressure",
-                                  "${currentWeather!.pressure} hPa",
-                                  Icons.speed,
-                                  itemWidth,
-                                ),
-                                _buildDetailItem(
-                                  "Visibility",
-                                  "${(currentWeather!.visibility / 1000).toStringAsFixed(1)} km",
-                                  Icons.visibility,
-                                  itemWidth,
-                                ),
-                                _buildDetailItem(
-                                  "Sunset",
-                                  DateFormat(
-                                    'h:mm a',
-                                  ).format(currentWeather!.sunset),
-                                  Icons.wb_twilight,
-                                  itemWidth,
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Sun Path Graph
-                        SunPathGraph(
-                          sunrise: currentWeather!.sunrise,
-                          sunset: currentWeather!.sunset,
-                          currentTime: DateTime.now(),
-                        ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 40), // Bottom padding
                       ],
-
-                      // Daily Forecast Title
-                      Text(
-                        "5-Day Forecast",
-                        style: GoogleFonts.outfit(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Daily Forecast List
-                      dailyForecast.isEmpty
-                          ? Center(
-                              child: Text(
-                                "Loading...",
-                                style: GoogleFonts.outfit(color: Colors.white),
-                              ),
-                            )
-                          : ListView.builder(
-                              physics: const NeverScrollableScrollPhysics(),
-                              shrinkWrap: true,
-                              itemCount: dailyForecast.length,
-                              itemBuilder: (context, index) {
-                                final item = dailyForecast[index];
-                                final day = DateFormat(
-                                  'EEEE',
-                                ).format(item.dateTime);
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 16),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      SizedBox(
-                                        width: 100,
-                                        child: Text(
-                                          day,
-                                          style: GoogleFonts.outfit(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          CutoutIcon(
-                                            icon: Icons.water_drop,
-                                            size: 12,
-                                            color: Colors.blue[200]!,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            "${item.humidity}%",
-                                            style: GoogleFonts.outfit(
-                                              color: Colors.blue[200],
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      CutoutIcon(
-                                        icon: _getIcon(item.condition),
-                                        color: Colors.white.withOpacity(0.8),
-                                        size: 24,
-                                      ),
-                                      SizedBox(
-                                        width: 50,
-                                        child: Text(
-                                          "${item.temperature.round()}°",
-                                          textAlign: TextAlign.end,
-                                          style: GoogleFonts.outfit(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-
-                      const SizedBox(height: 40), // Bottom padding
-                    ],
+                    ),
                   ),
                 ),
               ),
