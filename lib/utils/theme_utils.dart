@@ -3,25 +3,22 @@ import 'package:flutter/material.dart';
 enum DayPhase { day, sunset, night, sunrise }
 
 class ThemeUtils {
-  /// Determines the time of day based on current time and sunrise/sunset
+  /// Determines the time of day based on fixed time ranges
   static DayPhase getTimeOfDay(
     DateTime now,
-    DateTime sunrise,
-    DateTime sunset,
+    DateTime sunrise, // Kept for signature compatibility but unused for phase
+    DateTime sunset, // Kept for signature compatibility but unused for phase
   ) {
-    final sunriseStart = sunrise.subtract(const Duration(minutes: 30));
-    final sunriseEnd = sunrise.add(const Duration(minutes: 30));
-    final sunsetStart = sunset.subtract(const Duration(minutes: 30));
-    final sunsetEnd = sunset.add(const Duration(minutes: 30));
+    final hour = now.hour;
 
-    if (now.isAfter(sunriseStart) && now.isBefore(sunriseEnd)) {
-      return DayPhase.sunrise;
-    } else if (now.isAfter(sunsetStart) && now.isBefore(sunsetEnd)) {
-      return DayPhase.sunset;
-    } else if (now.isAfter(sunriseEnd) && now.isBefore(sunsetStart)) {
-      return DayPhase.day;
+    if (hour >= 6 && hour < 9) {
+      return DayPhase.sunrise; // Morning: 6 AM - 9 AM
+    } else if (hour >= 9 && hour < 16) {
+      return DayPhase.day; // Day: 9 AM - 4 PM
+    } else if (hour >= 16 && hour < 19) {
+      return DayPhase.sunset; // Sunset: 4 PM - 7 PM
     } else {
-      return DayPhase.night;
+      return DayPhase.night; // Night: 7 PM - 6 AM
     }
   }
 
@@ -60,32 +57,37 @@ class ThemeUtils {
     DateTime sunrise,
     DateTime sunset,
   ) {
-    // Daytime: sun moves from sunrise to sunset
-    if (now.isAfter(sunrise) && now.isBefore(sunset)) {
-      final totalDayMinutes = sunset.difference(sunrise).inMinutes;
-      if (totalDayMinutes <= 0) return 0.5;
-      final elapsedMinutes = now.difference(sunrise).inMinutes;
-      return (elapsedMinutes / totalDayMinutes).clamp(0.0, 1.0);
+    // Fixed cycle: Day is 06:00 to 19:00, Night is 19:00 to 06:00
+    final hour = now.hour;
+    final minute = now.minute;
+    final totalMinutes = hour * 60 + minute;
+
+    // Day Cycle: 06:00 (360 min) to 19:00 (1140 min)
+    if (hour >= 6 && hour < 19) {
+      final start = 6 * 60;
+      final end = 19 * 60;
+      final progress = (totalMinutes - start) / (end - start);
+      return progress.clamp(0.0, 1.0);
     }
 
-    // Nighttime: moon moves (we'll use a simplified version)
-    // Calculate progress through the night
-    final nextSunrise = now.isBefore(sunrise)
-        ? sunrise
-        : sunrise.add(const Duration(days: 1));
-    final prevSunset = now.isAfter(sunset)
-        ? sunset
-        : sunset.subtract(const Duration(days: 1));
+    // Night Cycle: 19:00 (1140 min) to 06:00 (360 min next day)
+    // We treat 19:00 as 0.0 and 06:00 as 1.0
+    int adjustedMinutes = totalMinutes;
+    if (hour < 6) {
+      adjustedMinutes += 24 * 60; // Add 24 hours if it's past midnight
+    }
 
-    final totalNightMinutes = nextSunrise.difference(prevSunset).inMinutes;
-    if (totalNightMinutes <= 0) return 0.5;
-    final elapsedMinutes = now.difference(prevSunset).inMinutes;
-    return (elapsedMinutes / totalNightMinutes).clamp(0.0, 1.0);
+    final start = 19 * 60;
+    final end = (6 + 24) * 60; // 30 hours (6 AM next day)
+
+    final progress = (adjustedMinutes - start) / (end - start);
+    return progress.clamp(0.0, 1.0);
   }
 
   /// Check if it's currently nighttime
   static bool isNight(DateTime now, DateTime sunrise, DateTime sunset) {
-    return now.isBefore(sunrise) || now.isAfter(sunset);
+    final hour = now.hour;
+    return hour >= 19 || hour < 6;
   }
 
   /// Get cloud color based on time of day
