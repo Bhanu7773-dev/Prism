@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp"
+    android:background="@drawable/widget_bg_glass">
+
+    <!-- Left: Temperature -->
+    <TextView
+        android:id="@+id/tv_temperature"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:text="20°"
+        android:textSize="28sp"
+        android:textColor="#FFFFFF"
+        android:fontFamily="sans-serif-thin"
+        android:includeFontPadding="false"
+        android:maxLines="1" />
+
+    <!-- Right: Icon + Location -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:orientation="vertical"
+        android:gravity="end">
+
+        <!-- Weather Icon -->
+        <ImageView
+            android:id="@+id/iv_weather_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_weather_cloudy"
+            android:layout_gravity="end" />
+
+        <!-- Location -->
+        <TextView
+            android:id="@+id/tv_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Location"
+            android:textSize="10sp"
+            android:textColor="#B0FFFFFF"
+            android:fontFamily="sans-serif-light"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:maxWidth="55dp"
+            android:layout_marginTop="2dp" />
+
+    </LinearLayout>
+
+</RelativeLayout>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/ic_weather_snowy">
+    
+    <!-- Snowflake 1 - slow drift down -->
+    <target android:name="snowGroup1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="translateY"
+                android:valueFrom="0"
+                android:valueTo="6"
+                android:duration="1200"
+                android:repeatCount="infinite"
+                android:repeatMode="restart"
+                android:interpolator="@android:interpolator/linear"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Snowflake 2 - medium drift -->
+    <target android:name="snowGroup2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="translateY"
+                android:valueFrom="0"
+                android:valueTo="5"
+                android:duration="1000"
+                android:startOffset="400"
+                android:repeatCount="infinite"
+                android:repeatMode="restart"
+                android:interpolator="@android:interpolator/linear"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Snowflake 3 - fast drift -->
+    <target android:name="snowGroup3">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="translateY"
+                android:valueFrom="0"
+                android:valueTo="7"
+                android:duration="800"
+                android:startOffset="600"
+                android:repeatCount="infinite"
+                android:repeatMode="restart"
+                android:interpolator="@android:interpolator/linear"/>
+        </aapt:attr>
+    </target>
+</animated-vector>

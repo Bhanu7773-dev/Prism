@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Compact weather widget</string>
+    <string name="widget_description_medium">Detailed weather widget with conditions</string>
+    <string name="widget_sun_description">Sunrise and sunset times</string>
+    <string name="widget_wind_description">Wind speed widget</string>
+    <string name="widget_details_description">Weather details - humidity, pressure, visibility</string>
+</resources>

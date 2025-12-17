@@ -38,6 +38,71 @@
         <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"
             android:value="true" />
+
+        <!-- Weather Widget Provider (Small) -->
+        <receiver
+            android:name=".WeatherWidgetProvider"
+            android:label="Prism Small"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_widget_info" />
+        </receiver>
+
+        <!-- Weather Widget Provider (Medium) -->
+        <receiver
+            android:name=".WeatherWidgetMediumProvider"
+            android:label="Prism Medium"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_widget_medium_info" />
+        </receiver>
+
+        <!-- Sun Path Widget Provider -->
+        <receiver
+            android:name=".SunPathWidgetProvider"
+            android:label="Prism Sun"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_sun_info" />
+        </receiver>
+
+        <!-- Wind Widget Provider -->
+        <receiver
+            android:name=".WindWidgetProvider"
+            android:label="Prism Wind"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_wind_info" />
+        </receiver>
+
+        <!-- Details Widget Provider -->
+        <receiver
+            android:name=".DetailsWidgetProvider"
+            android:label="Prism Details"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_details_info" />
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

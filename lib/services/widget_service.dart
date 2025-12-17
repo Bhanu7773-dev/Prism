@@ -1,0 +1,113 @@
+import 'package:home_widget/home_widget.dart';
+import '../models/weather_model.dart';
+
+/// Service to update home screen widget with weather data
+class WidgetService {
+  static const String appGroupId = 'group.com.dark.prism';
+  static const String androidWidgetName = 'WeatherWidgetProvider';
+
+  /// Update widget with current weather data
+  static Future<void> updateWidgetData(
+    Weather weather,
+    String locationName,
+  ) async {
+    try {
+      // Calculate day phase based on current time
+      final now = weather.localTime;
+      final hour = now.hour;
+      String dayPhase;
+
+      if (hour >= 6 && hour < 9) {
+        dayPhase = 'sunrise';
+      } else if (hour >= 9 && hour < 16) {
+        dayPhase = 'day';
+      } else if (hour >= 16 && hour < 19) {
+        dayPhase = 'sunset';
+      } else {
+        dayPhase = 'night';
+      }
+
+      // Save weather data to shared storage
+      await HomeWidget.saveWidgetData<String>(
+        'temperature',
+        weather.temperature.round().toString(),
+      );
+      await HomeWidget.saveWidgetData<String>('condition', weather.condition);
+      await HomeWidget.saveWidgetData<String>('location', locationName);
+      await HomeWidget.saveWidgetData<String>(
+        'feelsLike',
+        weather.feelsLike.round().toString(),
+      );
+      await HomeWidget.saveWidgetData<String>(
+        'humidity',
+        weather.humidity.toString(),
+      );
+      await HomeWidget.saveWidgetData<String>(
+        'conditionCode',
+        weather.conditionCode.toString(),
+      );
+      await HomeWidget.saveWidgetData<bool>('isNight', weather.isNight);
+      await HomeWidget.saveWidgetData<String>('dayPhase', dayPhase);
+
+      // Sun path data
+      await HomeWidget.saveWidgetData<String>(
+        'sunrise',
+        '${weather.sunrise.hour.toString().padLeft(2, '0')}:${weather.sunrise.minute.toString().padLeft(2, '0')}',
+      );
+      await HomeWidget.saveWidgetData<String>(
+        'sunset',
+        '${weather.sunset.hour.toString().padLeft(2, '0')}:${weather.sunset.minute.toString().padLeft(2, '0')}',
+      );
+
+      // Wind data
+      await HomeWidget.saveWidgetData<String>(
+        'windSpeed',
+        weather.windSpeed.round().toString(),
+      );
+
+      // Details data
+      await HomeWidget.saveWidgetData<String>(
+        'pressure',
+        weather.pressure.toString(),
+      );
+      await HomeWidget.saveWidgetData<String>(
+        'visibility',
+        (weather.visibility / 1000).toStringAsFixed(1),
+      );
+
+      await HomeWidget.saveWidgetData<String>(
+        'lastUpdated',
+        DateTime.now().toIso8601String(),
+      );
+
+      // Trigger all widget updates
+      await HomeWidget.updateWidget(
+        androidName: androidWidgetName,
+        qualifiedAndroidName: 'com.dark.prism.$androidWidgetName',
+      );
+      await HomeWidget.updateWidget(
+        androidName: 'WeatherWidgetMediumProvider',
+        qualifiedAndroidName: 'com.dark.prism.WeatherWidgetMediumProvider',
+      );
+      await HomeWidget.updateWidget(
+        androidName: 'SunPathWidgetProvider',
+        qualifiedAndroidName: 'com.dark.prism.SunPathWidgetProvider',
+      );
+      await HomeWidget.updateWidget(
+        androidName: 'WindWidgetProvider',
+        qualifiedAndroidName: 'com.dark.prism.WindWidgetProvider',
+      );
+      await HomeWidget.updateWidget(
+        androidName: 'DetailsWidgetProvider',
+        qualifiedAndroidName: 'com.dark.prism.DetailsWidgetProvider',
+      );
+    } catch (e) {
+      // Widget update failed silently - don't crash the app
+    }
+  }
+
+  /// Initialize widget configuration
+  static Future<void> initialize() async {
+    await HomeWidget.setAppGroupId(appGroupId);
+  }
+}

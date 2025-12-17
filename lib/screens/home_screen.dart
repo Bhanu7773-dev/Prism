@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
+import '../services/widget_service.dart';
 import '../widgets/layered_background.dart';
 import '../widgets/weather_hero.dart';
 import '../widgets/glass_bottom_sheet.dart';
@@ -105,6 +106,12 @@ class _HomeScreenState extends State<HomeScreen> {
         _locationName ??= weather.cityName;
         _isLoading = false;
       });
+
+      // Update home screen widget with new weather data
+      WidgetService.updateWidgetData(
+        weather,
+        _locationName ?? weather.cityName,
+      );
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
@@ -330,14 +337,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       top: lerpDouble(startTop, endTop, t), // Move up
                       left: lerpDouble(startLeft, endLeft, t), // Move left
                       right: 0, // Keep full width to allow Align to work
-                      child: Align(
-                        alignment: Alignment.lerp(
-                          Alignment.center,
-                          Alignment.centerLeft,
-                          t,
-                        )!,
-                        child: Builder(
-                          builder: (context) {
+                      child: IgnorePointer(
+                        // Prevent this large, full-width animated widget from
+                        // intercepting taps so top-right controls remain tappable.
+                        ignoring: true,
+                        child: Align(
+                          alignment: Alignment.lerp(
+                            Alignment.center,
+                            Alignment.centerLeft,
+                            t,
+                          )!,
+                          child: Builder(
+                            builder: (context) {
                             Widget content = Container(
                               height: t > 0.8 ? 40 : null, // Match pill height
                               padding: EdgeInsets.symmetric(
@@ -407,6 +418,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
+                    )
                   ],
                 );
               },

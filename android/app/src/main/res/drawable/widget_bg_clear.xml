@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base gradient - warm golden/peach liquid glass -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <gradient
+                android:startColor="#FFE5B4"
+                android:centerColor="#FFD699"
+                android:endColor="#FFCC80"
+                android:angle="135" />
+        </shape>
+    </item>
+    <!-- Secondary warm layer -->
+    <item android:top="30dp" android:left="30dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp"/>
+            <gradient
+                android:startColor="#25FFB74D"
+                android:endColor="#15FFA726"
+                android:angle="45" />
+        </shape>
+    </item>
+    <!-- Glass highlight -->
+    <item android:bottom="60dp">
+        <shape android:shape="rectangle">
+            <corners android:topLeftRadius="28dp" android:topRightRadius="28dp"/>
+            <gradient
+                android:startColor="#55FFFFFF"
+                android:centerColor="#30FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="270" />
+        </shape>
+    </item>
+    <!-- Sun glow effect at top right -->
+    <item android:left="60dp" android:bottom="50dp" android:right="0dp" android:top="0dp">
+        <shape android:shape="oval">
+            <gradient
+                android:startColor="#40FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:gradientRadius="80dp"
+                android:type="radial" />
+        </shape>
+    </item>
+    <!-- Border -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <stroke android:width="1dp" android:color="#35FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

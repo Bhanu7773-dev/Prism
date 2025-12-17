@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base gradient - icy white/light blue liquid glass -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <gradient
+                android:startColor="#F5F8FF"
+                android:centerColor="#E8F4FC"
+                android:endColor="#D6EAF8"
+                android:angle="135" />
+        </shape>
+    </item>
+    <!-- Frost layer -->
+    <item android:top="40dp" android:left="10dp" android:right="10dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="24dp"/>
+            <gradient
+                android:startColor="#15B3E5FC"
+                android:endColor="#20E1F5FE"
+                android:angle="45" />
+        </shape>
+    </item>
+    <!-- Ice crystal glow -->
+    <item android:bottom="60dp">
+        <shape android:shape="rectangle">
+            <corners android:topLeftRadius="28dp" android:topRightRadius="28dp"/>
+            <gradient
+                android:startColor="#60FFFFFF"
+                android:centerColor="#35FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="270" />
+        </shape>
+    </item>
+    <!-- Border -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <stroke android:width="1dp" android:color="#50FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

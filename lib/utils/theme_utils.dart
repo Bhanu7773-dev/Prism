@@ -133,4 +133,38 @@ class ThemeUtils {
         ];
     }
   }
+
+  /// Returns gradient colors for the Glass Bottom Sheet based on time of day
+  /// Matches the user's request for Pink/Purple during orange scenery (Sunset)
+  static List<Color> getGlassGradient(DayPhase phase) {
+    switch (phase) {
+      case DayPhase.day:
+        // Day - Vibrant Clear Blue
+        return const [
+          Color(0xFF4A90E2), // Bright Blue
+          Color(0xFF6DD5FA), // Sky Blue
+        ];
+      case DayPhase.sunset:
+        // Sunset - Pink & Purple (Requested: "pink and purple type of gradient")
+        return const [
+          Color(0xFF8E2DE2), // Purple
+          Color(0xFFFF0080), // Pinkish Magenta
+          Color(0xFFFF512F), // Deep Orange (bottom hint)
+        ];
+      case DayPhase.sunrise:
+        // Sunrise - Softer Pink & Orange
+        return const [
+          Color(0xFFDA4453), // Reddish
+          Color(0xFFFF6B6B), // Soft Red
+          Color(0xFFFFD93D), // Yellow-Orange
+        ];
+      case DayPhase.night:
+        // Night - Deep Purple/Dark Blue
+        return const [
+          Color(0xFF0F2027), // Black-Blue
+          Color(0xFF203A43), // Dark Teal-Blue
+          Color(0xFF2C5364), // Blue-Grey
+        ];
+    }
+  }
 }

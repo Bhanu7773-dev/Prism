@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Wave/wind decoration drawable -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="60dp"
+    android:viewportWidth="100"
+    android:viewportHeight="60">
+    
+    <!-- Wave lines -->
+    <path
+        android:strokeColor="#40FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M5,15 Q20,5 35,15 T65,15 T95,15"
+        android:strokeLineCap="round"/>
+    <path
+        android:strokeColor="#35FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M0,30 Q15,20 30,30 T60,30 T90,30"
+        android:strokeLineCap="round"/>
+    <path
+        android:strokeColor="#30FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M10,45 Q25,35 40,45 T70,45 T100,45"
+        android:strokeLineCap="round"/>
+</vector>

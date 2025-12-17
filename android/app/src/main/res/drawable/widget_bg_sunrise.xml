@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Shadow -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <solid android:color="#18000000" />
+        </shape>
+    </item>
+    <!-- Main background - Sunrise pink/orange gradient -->
+    <item android:bottom="2dp" android:right="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <gradient
+                android:startColor="#2C3E50"
+                android:centerColor="#E91E63"
+                android:endColor="#FFAB40"
+                android:angle="270" />
+            <stroke
+                android:width="1dp"
+                android:color="#30FFFFFF" />
+        </shape>
+    </item>
+    <!-- Warm glow at bottom -->
+    <item android:top="40dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp"/>
+            <gradient
+                android:startColor="#00000000"
+                android:endColor="#25FFAB40"
+                android:angle="270" />
+        </shape>
+    </item>
+</layer-list>

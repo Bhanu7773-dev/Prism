@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Minimal line-style moon icon -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M20,4 C14,4 9,9 9,15 C9,21 14,26 20,26 C21.5,26 22.9,25.7 24.2,25.2 C22.3,27.5 19.3,29 16,29 C10.5,29 6,24.5 6,19 C6,11.8 11.8,6 19,6 C19.3,6 19.7,6 20,6"/>
+</vector>

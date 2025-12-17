@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base gradient - soft purple/pink/blue pastel -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <gradient
+                android:startColor="#E8D5E7"
+                android:centerColor="#D4C4E3"
+                android:endColor="#B8C5D6"
+                android:angle="135" />
+        </shape>
+    </item>
+    <!-- Secondary layer - adds depth -->
+    <item android:top="40dp" android:left="20dp" android:right="0dp" android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp"/>
+            <gradient
+                android:startColor="#20B8C5D6"
+                android:centerColor="#30C9B8D4"
+                android:endColor="#25D4C4E3"
+                android:angle="45" />
+        </shape>
+    </item>
+    <!-- Glass highlight at top -->
+    <item android:bottom="70dp">
+        <shape android:shape="rectangle">
+            <corners android:topLeftRadius="28dp" android:topRightRadius="28dp" 
+                     android:bottomLeftRadius="0dp" android:bottomRightRadius="0dp"/>
+            <gradient
+                android:startColor="#50FFFFFF"
+                android:centerColor="#25FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="270" />
+        </shape>
+    </item>
+    <!-- Inner glow/reflection -->
+    <item android:top="20dp" android:left="10dp" android:right="60dp" android:bottom="50dp">
+        <shape android:shape="oval">
+            <gradient
+                android:startColor="#20FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:gradientRadius="100dp"
+                android:type="radial" />
+        </shape>
+    </item>
+    <!-- Border for glass effect -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <stroke
+                android:width="1dp"
+                android:color="#40FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

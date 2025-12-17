@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../models/weather_model.dart';
 import 'cutout_icon.dart';
 import 'sun_path_graph.dart';
+import '../utils/theme_utils.dart';
 
 class GlassBottomSheet extends StatelessWidget {
   final ForecastData? forecastData;
@@ -60,7 +61,14 @@ class GlassBottomSheet extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: _getWeatherGradient(),
-                  stops: const [0.0, 0.5, 1.0],
+                  // Let Flutter compute stops automatically when the number of
+                  // colors is not exactly 3 to avoid mismatches between
+                  // `colors` and `stops` lengths which throws at paint time.
+                  // If you want explicit control, compute stops here based on
+                  // the returned colors list length.
+                  stops: (_getWeatherGradient().length == 3)
+                      ? const [0.0, 0.5, 1.0]
+                      : null,
                 ),
               ),
               child: SingleChildScrollView(
@@ -413,135 +421,14 @@ class GlassBottomSheet extends StatelessWidget {
 
   /// Returns gradient colors based on current weather condition and time of day
   List<Color> _getWeatherGradient() {
-    final condition = currentWeather?.condition.toLowerCase() ?? '';
-    final now = currentWeather?.localTime;
-    final sunrise = currentWeather?.sunrise;
-    final sunset = currentWeather?.sunset;
+    final now = currentWeather?.localTime ?? DateTime.now();
+    final sunrise =
+        currentWeather?.sunrise ?? DateTime(now.year, now.month, now.day, 6, 0);
+    final sunset =
+        currentWeather?.sunset ?? DateTime(now.year, now.month, now.day, 18, 0);
 
-    if (now != null && sunrise != null && sunset != null) {
-      final nowMinutes = now.hour * 60 + now.minute;
-      final sunriseMinutes = sunrise.hour * 60 + sunrise.minute;
-      final sunsetMinutes = sunset.hour * 60 + sunset.minute;
-
-      // Sunrise window: 30 min before to 45 min after sunrise
-      final sunriseStart = sunriseMinutes - 30;
-      final sunriseEnd = sunriseMinutes + 45;
-
-      // Sunset window: 45 min before to 30 min after sunset
-      final sunsetStart = sunsetMinutes - 45;
-      final sunsetEnd = sunsetMinutes + 30;
-
-      // Golden hour morning: 45 min to 90 min after sunrise
-      final goldenMorningStart = sunriseMinutes + 45;
-      final goldenMorningEnd = sunriseMinutes + 90;
-
-      // Golden hour evening: 90 min to 45 min before sunset
-      final goldenEveningStart = sunsetMinutes - 90;
-      final goldenEveningEnd = sunsetMinutes - 45;
-
-      // Check time periods
-      if (nowMinutes >= sunriseStart && nowMinutes <= sunriseEnd) {
-        // Sunrise - warm pink/orange/coral tones
-        return const [
-          Color(0xFFe89b7a), // Coral pink
-          Color(0xFFd4785c), // Warm coral
-          Color(0xFFb85a40), // Deep coral
-        ];
-      }
-
-      if (nowMinutes >= sunsetStart && nowMinutes <= sunsetEnd) {
-        // Sunset - deep orange/purple/magenta tones
-        return const [
-          Color(0xFFc76b5c), // Sunset orange-red
-          Color(0xFFa84d6b), // Magenta pink
-          Color(0xFF7a3878), // Deep purple
-        ];
-      }
-
-      if (nowMinutes >= goldenMorningStart && nowMinutes <= goldenMorningEnd) {
-        // Golden hour morning - soft warm gold
-        return const [
-          Color(0xFFe8c078), // Soft gold
-          Color(0xFFd4a05c), // Warm gold
-          Color(0xFFb88040), // Deeper gold
-        ];
-      }
-
-      if (nowMinutes >= goldenEveningStart && nowMinutes <= goldenEveningEnd) {
-        // Golden hour evening - rich warm amber
-        return const [
-          Color(0xFFd4a060), // Rich amber
-          Color(0xFFb88048), // Deep amber
-          Color(0xFF985830), // Brown amber
-        ];
-      }
-
-      // Night time check
-      if (nowMinutes < sunriseMinutes || nowMinutes > sunsetMinutes) {
-        return const [
-          Color(0xFF2d2d4a), // Purple navy
-          Color(0xFF1a1a35), // Dark purple
-          Color(0xFF0f0f1a), // Almost black
-        ];
-      }
-    }
-
-    // Day time - BRIGHT colors based on weather condition
-    switch (condition) {
-      case 'clear':
-        // Bright warm sunny orange/golden
-        return const [
-          Color(0xFFe8a849), // Golden orange
-          Color(0xFFd4883b), // Warm amber
-          Color(0xFFb86b25), // Deep orange
-        ];
-      case 'clouds':
-      case 'mist':
-      case 'haze':
-        // Soft blue-grey
-        return const [
-          Color(0xFF8fa4b8), // Light steel blue
-          Color(0xFF6b8399), // Medium blue-grey
-          Color(0xFF4a6278), // Deeper blue-grey
-        ];
-      case 'smoke':
-      case 'dust':
-      case 'fog':
-        // Misty grey
-        return const [
-          Color(0xFFa8a8a8), // Light grey
-          Color(0xFF888888), // Medium grey
-          Color(0xFF5a5a5a), // Deeper grey
-        ];
-      case 'rain':
-      case 'drizzle':
-        // Cool blue rain tones
-        return const [
-          Color(0xFF5c8db8), // Sky blue
-          Color(0xFF4578a0), // Medium blue
-          Color(0xFF2d5a7a), // Deep blue
-        ];
-      case 'thunderstorm':
-        // Dramatic purple storm
-        return const [
-          Color(0xFF8a6bb8), // Light purple
-          Color(0xFF6b4d99), // Medium purple
-          Color(0xFF4a3378), // Deep purple
-        ];
-      case 'snow':
-        // Bright icy white-blue
-        return const [
-          Color(0xFFc8d8e8), // Icy white-blue
-          Color(0xFFa8c0d8), // Light ice
-          Color(0xFF88a8c0), // Cool ice blue
-        ];
-      default:
-        // Default - soft blue for unknown
-        return const [
-          Color(0xFF7a9bb8), // Soft blue
-          Color(0xFF5c8099), // Medium blue
-          Color(0xFF3d6078), // Deeper blue
-        ];
-    }
+    // Use ThemeUtils to ensure perfect match with background scenery
+    final phase = ThemeUtils.getTimeOfDay(now, sunrise, sunset);
+    return ThemeUtils.getGlassGradient(phase);
   }
 }
