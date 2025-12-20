@@ -29,48 +29,58 @@ class GlassContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final br = borderRadius ?? BorderRadius.circular(20);
 
-    return ClipRRect(
-      borderRadius: br,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Container(
-          width: width,
-          height: height,
-          padding: padding ?? const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: color.withOpacity(opacity),
-            borderRadius: br,
-            // The "Refraction" / Border Highlight
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 1.5,
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                // Specular Highlight (Top Left - Light hitting glass)
-                Colors.white.withOpacity(0.4),
-                // Middle - Clear
-                Colors.white.withOpacity(0.05),
-                // Shadow (Bottom Right)
-                Colors.white.withOpacity(0.1),
-              ],
-              stops: const [0.0, 0.4, 1.0],
-            ),
-            boxShadow: [
-              // Subtle drop shadow for depth
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 15,
-                spreadRadius: -5,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: child,
+    // Optimized Glass Effect:
+    // Instead of BackdropFilter (which is expensive), we use multiple
+    // gradient layers and semi-transparency to mimic the "Glass" look.
+    // If 'blur' is 0, we skip the expensive filter entirely.
+
+    Widget content = Container(
+      width: width,
+      height: height,
+      padding: padding ?? const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: color.withOpacity(opacity),
+        borderRadius: br,
+        // Premium Border Highlight (Simulated light refraction)
+        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.2),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            // Specular Highlight (Top Left)
+            Colors.white.withOpacity(0.2),
+            // Middle - Transparent
+            color.withOpacity(0.02),
+            // Bottom Right Glow
+            Colors.white.withOpacity(0.05),
+          ],
+          stops: const [0.0, 0.5, 1.0],
         ),
+        boxShadow: [
+          // Subtle drop shadow for depth
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            spreadRadius: -4,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
+      child: child,
     );
+
+    // Only apply blur if explicitly requested (non-zero blur)
+    if (blur > 0) {
+      return ClipRRect(
+        borderRadius: br,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: content,
+        ),
+      );
+    }
+
+    // Default: High-performance Faux Glass
+    return ClipRRect(borderRadius: br, child: content);
   }
 }

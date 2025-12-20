@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Semi-transparent frosted background -->
+    <!-- Base frosted layer with gradient for depth -->
     <item>
         <shape android:shape="rectangle">
             <corners android:radius="24dp" />
-            <solid android:color="#18FFFFFF" />
+            <gradient
+                android:angle="270"
+                android:startColor="#25FFFFFF"
+                android:centerColor="#15FFFFFF"
+                android:endColor="#10FFFFFF"
+                android:type="linear" />
         </shape>
     </item>
     <!-- Subtle thin border -->
@@ -12,8 +17,8 @@
         <shape android:shape="rectangle">
             <corners android:radius="24dp" />
             <stroke
-                android:width="0.5dp"
-                android:color="#30FFFFFF" />
+                android:width="0.8dp"
+                android:color="#40FFFFFF" />
         </shape>
     </item>
 </layer-list>

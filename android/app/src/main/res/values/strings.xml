@@ -5,4 +5,5 @@
     <string name="widget_sun_description">Sunrise and sunset times</string>
     <string name="widget_wind_description">Wind speed widget</string>
     <string name="widget_details_description">Weather details - humidity, pressure, visibility</string>
+    <string name="widget_description_forecast">5-day weather forecast overview</string>
 </resources>

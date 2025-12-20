@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@drawable/widget_bg_glass"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="London"
+        android:textSize="12sp"
+        android:textColor="#B0FFFFFF"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="12dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Day 1 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/tv_day1_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MON"
+                android:textSize="10sp"
+                android:textColor="#80FFFFFF"
+                android:fontFamily="sans-serif-light" />
+            <ImageView
+                android:id="@+id/iv_day1_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:src="@drawable/ic_weather_cloudy" />
+            <TextView
+                android:id="@+id/tv_day1_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="24°/18°"
+                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <!-- Day 2 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/tv_day2_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TUE"
+                android:textSize="10sp"
+                android:textColor="#80FFFFFF"
+                android:fontFamily="sans-serif-light" />
+            <ImageView
+                android:id="@+id/iv_day2_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:src="@drawable/ic_weather_sunny" />
+            <TextView
+                android:id="@+id/tv_day2_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="25°/19°"
+                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <!-- Day 3 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/tv_day3_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="WED"
+                android:textSize="10sp"
+                android:textColor="#80FFFFFF"
+                android:fontFamily="sans-serif-light" />
+            <ImageView
+                android:id="@+id/iv_day3_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:src="@drawable/ic_weather_rainy" />
+            <TextView
+                android:id="@+id/tv_day3_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="22°/17°"
+                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <!-- Day 4 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/tv_day4_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="THU"
+                android:textSize="10sp"
+                android:textColor="#80FFFFFF"
+                android:fontFamily="sans-serif-light" />
+            <ImageView
+                android:id="@+id/iv_day4_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:src="@drawable/ic_weather_cloudy" />
+            <TextView
+                android:id="@+id/tv_day4_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="23°/18°"
+                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <!-- Day 5 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/tv_day5_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="FRI"
+                android:textSize="10sp"
+                android:textColor="#80FFFFFF"
+                android:fontFamily="sans-serif-light" />
+            <ImageView
+                android:id="@+id/iv_day5_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:src="@drawable/ic_weather_sunny" />
+            <TextView
+                android:id="@+id/tv_day5_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="24°/19°"
+                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

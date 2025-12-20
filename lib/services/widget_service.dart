@@ -9,8 +9,9 @@ class WidgetService {
   /// Update widget with current weather data
   static Future<void> updateWidgetData(
     Weather weather,
-    String locationName,
-  ) async {
+    String locationName, {
+    ForecastData? forecast,
+  }) async {
     try {
       // Calculate day phase based on current time
       final now = weather.localTime;
@@ -75,6 +76,55 @@ class WidgetService {
         (weather.visibility / 1000).toStringAsFixed(1),
       );
 
+      // Forecast data for 5 days
+      if (forecast != null && forecast.list.isNotEmpty) {
+        // Group by day to get daily high/low
+        Map<String, List<ForecastItem>> dailyForecasts = {};
+        for (var item in forecast.list) {
+          String dayKey =
+              '${item.dateTime.year}-${item.dateTime.month}-${item.dateTime.day}';
+          dailyForecasts.putIfAbsent(dayKey, () => []).add(item);
+        }
+
+        List<String> sortedDays = dailyForecasts.keys.toList()..sort();
+        // Skip today if necessary, but for simplicity we'll just take the first 5 unique days available
+        int savedCount = 0;
+        final weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        for (var dayKey in sortedDays) {
+          if (savedCount >= 5) break;
+          var dayItems = dailyForecasts[dayKey]!;
+          var firstItem = dayItems.first;
+
+          double maxTemp = -999;
+          double minTemp = 999;
+          for (var item in dayItems) {
+            if (item.temperature > maxTemp) maxTemp = item.temperature;
+            if (item.temperature < minTemp) minTemp = item.temperature;
+          }
+
+          savedCount++;
+          String dayName = weekdays[firstItem.dateTime.weekday % 7];
+          // If it's today, maybe label as 'Now' or just keep day name
+          if (dayKey == '${now.year}-${now.month}-${now.day}') {
+            dayName = 'Today';
+          }
+
+          await HomeWidget.saveWidgetData<String>(
+            'day${savedCount}_name',
+            dayName,
+          );
+          await HomeWidget.saveWidgetData<String>(
+            'day${savedCount}_temp',
+            '${maxTemp.round()}°/${minTemp.round()}°',
+          );
+          await HomeWidget.saveWidgetData<String>(
+            'day${savedCount}_condition',
+            firstItem.condition,
+          );
+        }
+      }
+
       await HomeWidget.saveWidgetData<String>(
         'lastUpdated',
         DateTime.now().toIso8601String(),
@@ -100,6 +150,10 @@ class WidgetService {
       await HomeWidget.updateWidget(
         androidName: 'DetailsWidgetProvider',
         qualifiedAndroidName: 'com.dark.prism.DetailsWidgetProvider',
+      );
+      await HomeWidget.updateWidget(
+        androidName: 'ForecastWidgetProvider',
+        qualifiedAndroidName: 'com.dark.prism.ForecastWidgetProvider',
       );
     } catch (e) {
       // Widget update failed silently - don't crash the app

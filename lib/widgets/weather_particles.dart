@@ -247,10 +247,6 @@ class _RainEffectState extends State<RainEffect>
         _framesSinceLightning = 0;
       }
     }
-
-    if (mounted) {
-      setState(() {});
-    }
   }
 
   @override
@@ -270,19 +266,24 @@ class _RainEffectState extends State<RainEffect>
           }
           _initDrops(size);
 
-          return Stack(
-            children: [
-              CustomPaint(
-                size: size,
-                painter: RainPainter(drops: _drops),
-                willChange: true,
-                isComplex: false,
-              ),
-              if (widget.isThunderstorm && _lightningOpacity > 0)
-                Container(
-                  color: Colors.white.withOpacity(_lightningOpacity * 0.3),
-                ),
-            ],
+          return AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Stack(
+                children: [
+                  CustomPaint(
+                    size: size,
+                    painter: RainPainter(drops: _drops, repaint: _controller),
+                    willChange: true,
+                    isComplex: false,
+                  ),
+                  if (widget.isThunderstorm && _lightningOpacity > 0)
+                    Container(
+                      color: Colors.white.withOpacity(_lightningOpacity * 0.3),
+                    ),
+                ],
+              );
+            },
           );
         },
       ),
@@ -292,13 +293,14 @@ class _RainEffectState extends State<RainEffect>
 
 class RainPainter extends CustomPainter {
   final List<RainDrop> drops;
-  
+
   // Cached paint for performance
   static final Paint _paint = Paint()
     ..strokeWidth = 1.5
     ..strokeCap = StrokeCap.round;
 
-  RainPainter({required this.drops});
+  RainPainter({required this.drops, required Listenable repaint})
+    : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -409,9 +411,7 @@ class _SnowEffectState extends State<SnowEffect>
     }
 
     // Trigger repaint
-    if (mounted) {
-      setState(() {});
-    }
+    // Repaint is triggered via repaint listener
   }
 
   @override
@@ -431,11 +431,16 @@ class _SnowEffectState extends State<SnowEffect>
           }
           _initFlakes(size);
 
-          return CustomPaint(
-            size: size,
-            painter: SnowPainter(flakes: _flakes),
-            willChange: true,
-            isComplex: false,
+          return AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return CustomPaint(
+                size: size,
+                painter: SnowPainter(flakes: _flakes, repaint: _controller),
+                willChange: true,
+                isComplex: false,
+              );
+            },
           );
         },
       ),
@@ -445,24 +450,16 @@ class _SnowEffectState extends State<SnowEffect>
 
 class SnowPainter extends CustomPainter {
   final List<Snowflake> flakes;
-  
+
   // Cached paints for performance
   static final Paint _simplePaint = Paint()..style = PaintingStyle.fill;
   static final Paint _armPaint = Paint()
     ..style = PaintingStyle.stroke
     ..strokeWidth = 1.2
     ..strokeCap = StrokeCap.round;
-  static final Paint _branchPaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 0.8
-    ..strokeCap = StrokeCap.round;
-  static final Paint _detailPaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 0.5
-    ..strokeCap = StrokeCap.round;
-  static final Paint _centerPaint = Paint()..style = PaintingStyle.fill;
 
-  SnowPainter({required this.flakes});
+  SnowPainter({required this.flakes, required Listenable repaint})
+    : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -473,141 +470,33 @@ class SnowPainter extends CustomPainter {
       if (flake.y > simplifyThreshold) {
         // Simple circle when near/over the glass sheet (performance)
         _simplePaint.color = Colors.white.withOpacity(flake.opacity);
-        canvas.drawCircle(Offset(flake.x, flake.y), flake.size * 0.5, _simplePaint);
+        canvas.drawCircle(
+          Offset(flake.x, flake.y),
+          flake.size * 0.4,
+          _simplePaint,
+        );
       } else {
-        // Beautiful realistic snowflake in upper area
-        _drawRealisticSnowflake(canvas, flake);
+        // Simplified snowflake for performance
+        _drawSimplifiedSnowflake(canvas, flake);
       }
     }
   }
 
-  void _drawRealisticSnowflake(Canvas canvas, Snowflake flake) {
+  void _drawSimplifiedSnowflake(Canvas canvas, Snowflake flake) {
     canvas.save();
     canvas.translate(flake.x, flake.y);
-    canvas.rotate(flake.wobble * 0.3); // Gentle rotation
+    canvas.rotate(flake.wobble * 0.2);
 
-    final s = flake.size; // Base size
-
-    // Update paint colors for this flake
+    final s = flake.size;
     _armPaint.color = Colors.white.withOpacity(flake.opacity);
-    _branchPaint.color = Colors.white.withOpacity(flake.opacity * 0.9);
-    _detailPaint.color = Colors.white.withOpacity(flake.opacity * 0.7);
-    _centerPaint.color = Colors.white.withOpacity(flake.opacity);
 
-    // Center dot (crystal core)
-    canvas.drawCircle(Offset.zero, s * 0.12, _centerPaint);
-
-    // Draw 6 main arms with dendrite branches
-    for (var i = 0; i < 6; i++) {
-      final angle = i * pi / 3;
-
-      canvas.save();
-      canvas.rotate(angle);
-
-      // Main arm (stem)
-      canvas.drawLine(Offset.zero, Offset(s, 0), _armPaint);
-
-      // Primary branches (at 60% and 80% of arm length)
-      _drawBranch(canvas, s * 0.5, s * 0.45, _branchPaint, _detailPaint);
-      _drawBranch(canvas, s * 0.75, s * 0.35, _branchPaint, _detailPaint);
-
-      // Small tip branches at the end
-      _drawTipBranches(canvas, s, s * 0.25, _branchPaint);
-
-      // Tiny detail branches near base
-      _drawSmallBranch(canvas, s * 0.3, s * 0.2, _detailPaint);
-
-      canvas.restore();
+    // Draw 3 crossing lines (6 arms) - much faster than full dendrites
+    for (var i = 0; i < 3; i++) {
+      canvas.rotate(pi / 3);
+      canvas.drawLine(Offset(-s * 0.5, 0), Offset(s * 0.5, 0), _armPaint);
     }
 
     canvas.restore();
-  }
-
-  // Draw a symmetric branch pair with sub-branches
-  void _drawBranch(
-    Canvas canvas,
-    double position,
-    double length,
-    Paint branchPaint,
-    Paint detailPaint,
-  ) {
-    final branchAngle = pi / 3; // 60 degrees
-
-    // Upper branch
-    canvas.drawLine(
-      Offset(position, 0),
-      Offset(position + cos(branchAngle) * length, -sin(branchAngle) * length),
-      branchPaint,
-    );
-
-    // Lower branch (mirror)
-    canvas.drawLine(
-      Offset(position, 0),
-      Offset(position + cos(branchAngle) * length, sin(branchAngle) * length),
-      branchPaint,
-    );
-
-    // Sub-branches on upper branch
-    final subPos = position + cos(branchAngle) * length * 0.6;
-    final subPosY = -sin(branchAngle) * length * 0.6;
-    final subLen = length * 0.4;
-
-    canvas.drawLine(
-      Offset(subPos, subPosY),
-      Offset(subPos + subLen * 0.5, subPosY - subLen * 0.7),
-      detailPaint,
-    );
-
-    // Sub-branches on lower branch (mirror)
-    canvas.drawLine(
-      Offset(subPos, -subPosY),
-      Offset(subPos + subLen * 0.5, -subPosY + subLen * 0.7),
-      detailPaint,
-    );
-  }
-
-  // Draw tip branches at the end of main arm
-  void _drawTipBranches(
-    Canvas canvas,
-    double position,
-    double length,
-    Paint paint,
-  ) {
-    final tipAngle = pi / 4; // 45 degrees
-
-    canvas.drawLine(
-      Offset(position, 0),
-      Offset(position + cos(tipAngle) * length, -sin(tipAngle) * length),
-      paint,
-    );
-
-    canvas.drawLine(
-      Offset(position, 0),
-      Offset(position + cos(tipAngle) * length, sin(tipAngle) * length),
-      paint,
-    );
-  }
-
-  // Draw small detail branch
-  void _drawSmallBranch(
-    Canvas canvas,
-    double position,
-    double length,
-    Paint paint,
-  ) {
-    final angle = pi / 2.5;
-
-    canvas.drawLine(
-      Offset(position, 0),
-      Offset(position + cos(angle) * length * 0.5, -sin(angle) * length),
-      paint,
-    );
-
-    canvas.drawLine(
-      Offset(position, 0),
-      Offset(position + cos(angle) * length * 0.5, sin(angle) * length),
-      paint,
-    );
   }
 
   @override
@@ -931,7 +820,7 @@ class _FrostEffectState extends State<FrostEffect>
 
 class FrostPainter extends CustomPainter {
   final List<FrostParticle> particles;
-  
+
   // Cached paint for performance
   static final Paint _paint = Paint()
     ..style = PaintingStyle.stroke
@@ -1135,12 +1024,12 @@ class _StarsEffectState extends State<StarsEffect>
 
   void _update() {
     if (!mounted) return;
-    
+
     // Skip frames for stars (twinkle is slow)
     _frameSkip++;
     if (_frameSkip < 2) return;
     _frameSkip = 0;
-    
+
     for (var star in _stars) {
       star.twinklePhase += star.twinkleSpeed;
     }
@@ -1172,7 +1061,7 @@ class _StarsEffectState extends State<StarsEffect>
 
 class StarsPainter extends CustomPainter {
   final List<Star> stars;
-  
+
   // Cached paints for performance
   static final Paint _glowPaint = Paint()
     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
@@ -1469,7 +1358,7 @@ class _DustStormEffectState extends State<DustStormEffect>
 
 class DustPainter extends CustomPainter {
   final List<DustParticle> particles;
-  
+
   // Cached paint for performance
   static final Paint _paint = Paint()..style = PaintingStyle.fill;
 
@@ -1594,7 +1483,7 @@ class _HailEffectState extends State<HailEffect>
 
 class HailPainter extends CustomPainter {
   final List<HailStone> stones;
-  
+
   // Cached paints for performance
   static final Paint _paint = Paint()..style = PaintingStyle.fill;
   static final Paint _highlightPaint = Paint()..style = PaintingStyle.fill;
@@ -1745,7 +1634,7 @@ class _WindStreaksEffectState extends State<WindStreaksEffect>
 class WindStreaksPainter extends CustomPainter {
   final List<Offset> streaks;
   final double windSpeed;
-  
+
   // Cached paint for performance
   static final Paint _paint = Paint()
     ..color = Colors.white.withOpacity(0.15)

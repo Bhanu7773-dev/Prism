@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../utils/theme_utils.dart';
-import 'parallax_scenery.dart';
 import 'weather_particles.dart';
 
 class LayeredBackground extends StatefulWidget {
@@ -49,12 +48,6 @@ class _LayeredBackgroundState extends State<LayeredBackground>
   List<Color> _targetSkyColors = ThemeUtils.getSkyGradient(DayPhase.day);
   Color _currentCloudColor = Colors.white;
   Color _targetCloudColor = Colors.white;
-  List<Color> _currentMountainColors = ThemeUtils.getMountainColors(
-    DayPhase.day,
-  );
-  List<Color> _targetMountainColors = ThemeUtils.getMountainColors(
-    DayPhase.day,
-  );
 
   @override
   void initState() {
@@ -122,11 +115,6 @@ class _LayeredBackgroundState extends State<LayeredBackground>
             _transitionController.value,
           ) ??
           _currentCloudColor;
-      _currentMountainColors = _lerpColorList(
-        _currentMountainColors,
-        _targetMountainColors,
-        _transitionController.value,
-      );
     }
 
     // Update current time of day before setting target
@@ -138,7 +126,6 @@ class _LayeredBackgroundState extends State<LayeredBackground>
     _targetCelestialProgress = newProgress;
     _targetSkyColors = ThemeUtils.getSkyGradient(newTimeOfDay);
     _targetCloudColor = ThemeUtils.getCloudColor(newTimeOfDay);
-    _targetMountainColors = ThemeUtils.getMountainColors(newTimeOfDay);
 
     if (animate) {
       // Reset and play transition
@@ -147,7 +134,6 @@ class _LayeredBackgroundState extends State<LayeredBackground>
       // Instant update
       _currentSkyColors = _targetSkyColors;
       _currentCloudColor = _targetCloudColor;
-      _currentMountainColors = _targetMountainColors;
       _currentTimeOfDay = newTimeOfDay;
     }
 
@@ -193,11 +179,6 @@ class _LayeredBackgroundState extends State<LayeredBackground>
         final cloudColor =
             Color.lerp(_currentCloudColor, _targetCloudColor, t) ??
             _targetCloudColor;
-        final mountainColors = _lerpColorList(
-          _currentMountainColors,
-          _targetMountainColors,
-          t,
-        );
 
         // Determine if we should show stars
         final showStars =
@@ -294,19 +275,7 @@ class _LayeredBackgroundState extends State<LayeredBackground>
               child: _buildCloud(180, 0.3, cloudColor),
             ),
 
-            // 10. Parallax Scenery (Mountains with animated colors)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: RepaintBoundary(
-                child: ParallaxScenery(
-                  height: 350,
-                  colors: mountainColors,
-                  parallaxOffset: 0, // Disabled movement for performance
-                ),
-              ),
-            ),
+            // 10. Parallax Scenery (Mountains removed for performance)
           ],
         );
       },
