@@ -6,7 +6,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/weather_model.dart';
 import 'cutout_icon.dart';
+import 'aqi_meter.dart';
+import 'mini_wind_map.dart';
 import 'sun_path_graph.dart';
+import 'uv_meter.dart';
+import 'rain_graph.dart';
+import 'moon_phase_widget.dart';
+import 'feels_like_card.dart';
+import 'weather_alert_banner.dart';
 import '../utils/theme_utils.dart';
 
 class GlassBottomSheet extends StatelessWidget {
@@ -91,6 +98,13 @@ class GlassBottomSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
 
+                        // Alerts
+                        if (currentWeather?.alerts != null &&
+                            currentWeather!.alerts!.isNotEmpty) ...[
+                          WeatherAlertBanner(alerts: currentWeather!.alerts!),
+                          const SizedBox(height: 24),
+                        ],
+
                         // Hourly Forecast Title
                         Text(
                           "Hourly Forecast",
@@ -174,6 +188,35 @@ class GlassBottomSheet extends StatelessWidget {
 
                         const SizedBox(height: 32),
 
+                        // Feels Like & Moon Phase Row
+                        if (currentWeather != null) ...[
+                          IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: FeelsLikeCard(
+                                    temp: currentWeather!.temperature,
+                                    feelsLike: currentWeather!.feelsLike,
+                                    humidity: currentWeather!.humidity
+                                        .toDouble(),
+                                    windSpeed: currentWeather!.windSpeed,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: currentWeather!.moonPhase != null
+                                      ? MoonPhaseWidget(
+                                          phaseName: currentWeather!.moonPhase!,
+                                        )
+                                      : const SizedBox(),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+
                         // Weather Details Grid
                         if (currentWeather != null) ...[
                           Text(
@@ -234,7 +277,34 @@ class GlassBottomSheet extends StatelessWidget {
                               );
                             },
                           ),
+                          const SizedBox(height: 16),
+
+                          // AQI Meter
+                          if (currentWeather?.airComponents != null) ...[
+                            AqiMeter(
+                              airComponents: currentWeather!.airComponents,
+                            ),
+                            const SizedBox(height: 32),
+                          ],
+
+                          // Mini Wind Map
+                          MiniWindMap(
+                            latitude: currentWeather!.latitude,
+                            longitude: currentWeather!.longitude,
+                          ),
                           const SizedBox(height: 32),
+
+                          // UV Meter
+                          if (currentWeather?.uvIndex != null) ...[
+                            UvMeter(uvIndex: currentWeather!.uvIndex!),
+                            const SizedBox(height: 32),
+                          ],
+
+                          // Rain Graph (Next 24h)
+                          if (forecastData != null) ...[
+                            RainGraph(forecast: forecastData!.list),
+                            const SizedBox(height: 32),
+                          ],
 
                           // Sun/Moon Path Graph
                           CelestialPathGraph(

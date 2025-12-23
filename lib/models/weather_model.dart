@@ -13,6 +13,14 @@ class Weather {
   final DateTime sunrise;
   final DateTime sunset;
   final int timezoneOffset; // Timezone offset in seconds from UTC
+  final double latitude;
+  final double longitude;
+  final int? aqi;
+  final Map<String, double>? airComponents;
+  final double? uvIndex;
+  final double? rainProb; // Probability of precipitation (0-1)
+  final String? moonPhase; // Description e.g., "Full Moon"
+  final List<String>? alerts;
 
   Weather({
     required this.cityName,
@@ -29,6 +37,14 @@ class Weather {
     required this.sunrise,
     required this.sunset,
     required this.timezoneOffset,
+    required this.latitude,
+    required this.longitude,
+    this.aqi,
+    this.airComponents,
+    this.uvIndex,
+    this.rainProb,
+    this.moonPhase,
+    this.alerts,
   });
 
   /// Get current time in the city's timezone
@@ -48,6 +64,40 @@ class Weather {
     );
   }
 
+  Weather copyWith({
+    int? aqi,
+    Map<String, double>? airComponents,
+    double? uvIndex,
+    double? rainProb,
+    String? moonPhase,
+    List<String>? alerts,
+  }) {
+    return Weather(
+      cityName: cityName,
+      temperature: temperature,
+      condition: condition,
+      conditionCode: conditionCode,
+      description: description,
+      iconCode: iconCode,
+      humidity: humidity,
+      windSpeed: windSpeed,
+      feelsLike: feelsLike,
+      pressure: pressure,
+      visibility: visibility,
+      sunrise: sunrise,
+      sunset: sunset,
+      timezoneOffset: timezoneOffset,
+      latitude: latitude,
+      longitude: longitude,
+      aqi: aqi ?? this.aqi,
+      airComponents: airComponents ?? this.airComponents,
+      uvIndex: uvIndex ?? this.uvIndex,
+      rainProb: rainProb ?? this.rainProb,
+      moonPhase: moonPhase ?? this.moonPhase,
+      alerts: alerts ?? this.alerts,
+    );
+  }
+
   /// Check if it's currently night time in the city
   bool get isNight {
     final now = localTime;
@@ -55,7 +105,7 @@ class Weather {
     final nowMinutes = now.hour * 60 + now.minute;
     final sunriseMinutes = sunrise.hour * 60 + sunrise.minute;
     final sunsetMinutes = sunset.hour * 60 + sunset.minute;
-    
+
     return nowMinutes < sunriseMinutes || nowMinutes > sunsetMinutes;
   }
 
@@ -94,7 +144,7 @@ class Weather {
     // the shifted values and create new non-UTC DateTimes
     final sunriseShifted = sunriseUtc.add(Duration(seconds: timezoneOffset));
     final sunsetShifted = sunsetUtc.add(Duration(seconds: timezoneOffset));
-    
+
     // Create non-UTC DateTimes so .hour and .minute return the actual local values
     final sunriseLocal = DateTime(
       sunriseShifted.year,
@@ -103,6 +153,7 @@ class Weather {
       sunriseShifted.hour,
       sunriseShifted.minute,
       sunriseShifted.second,
+      sunriseShifted.millisecond,
     );
     final sunsetLocal = DateTime(
       sunsetShifted.year,
@@ -111,14 +162,8 @@ class Weather {
       sunsetShifted.hour,
       sunsetShifted.minute,
       sunsetShifted.second,
+      sunsetShifted.millisecond,
     );
-
-    // Debug: Print the values to verify
-    print('DEBUG: City timezone offset: $timezoneOffset seconds (${timezoneOffset / 3600} hours)');
-    print('DEBUG: Sunrise UTC: $sunriseUtc');
-    print('DEBUG: Sunrise Local: $sunriseLocal (${sunriseLocal.hour}:${sunriseLocal.minute})');
-    print('DEBUG: Sunset UTC: $sunsetUtc');
-    print('DEBUG: Sunset Local: $sunsetLocal (${sunsetLocal.hour}:${sunsetLocal.minute})');
 
     return Weather(
       cityName: json['name'] ?? '',
@@ -135,6 +180,15 @@ class Weather {
       timezoneOffset: timezoneOffset,
       sunrise: sunriseLocal,
       sunset: sunsetLocal,
+      latitude: (json['coord']?['lat'] as num?)?.toDouble() ?? 0.0,
+      longitude: (json['coord']?['lon'] as num?)?.toDouble() ?? 0.0,
+      aqi: json['aqi'] as int?,
+      airComponents: (json['airComponents'] as Map<String, dynamic>?)?.map(
+        (k, v) => MapEntry(k, (v as num).toDouble()),
+      ),
+      uvIndex: (json['uvi'] as num?)?.toDouble(),
+      rainProb: (json['pop'] as num?)?.toDouble(),
+      // Alerts and Moon Phase usually come from OneCall, so we might inject them later
     );
   }
 }
@@ -168,8 +222,9 @@ class ForecastItem {
       shifted.hour,
       shifted.minute,
       shifted.second,
+      shifted.millisecond,
     );
-    
+
     return ForecastItem(
       dateTime: localDateTime,
       temperature: (json['main']['temp'] as num).toDouble(),

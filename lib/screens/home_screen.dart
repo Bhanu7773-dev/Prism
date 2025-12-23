@@ -10,6 +10,7 @@ import '../services/widget_service.dart';
 import '../widgets/layered_background.dart';
 import '../widgets/glass_bottom_sheet.dart';
 import '../widgets/glass_container.dart';
+import 'wind_map_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -599,6 +600,27 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: () {
                           Navigator.pop(context);
                           _fetchWeather();
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Wind Map
+                      _buildSettingsTile(
+                        icon: Icons.air,
+                        title: 'Wind Map',
+                        subtitle: 'Live global wind visualization',
+                        trailing: Icon(
+                          Icons.chevron_right,
+                          color: Colors.white.withOpacity(0.5),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const WindMapScreen(),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 16),

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/weather_model.dart';
-
+import '../utils/moon_utils.dart';
 import '../api_keys.dart';
 
 class WeatherService {
@@ -15,7 +15,23 @@ class WeatherService {
     );
 
     if (response.statusCode == 200) {
-      return Weather.fromJson(jsonDecode(response.body));
+      final weather = Weather.fromJson(jsonDecode(response.body));
+      final pollution = await _getPollutionData(
+        weather.latitude,
+        weather.longitude,
+      );
+      final uv = await _getUvIndex(weather.latitude, weather.longitude);
+
+      return weather.copyWith(
+        aqi: pollution?['main']?['aqi'],
+        airComponents: (pollution?['components'] as Map<String, dynamic>?)?.map(
+          (k, v) => MapEntry(k, (v as num).toDouble()),
+        ),
+        uvIndex: uv,
+        moonPhase: MoonUtils.getMoonPhaseName(
+          MoonUtils.getMoonPhase(weather.localTime),
+        ),
+      );
     } else {
       throw Exception('Failed to load weather data');
     }
@@ -27,10 +43,68 @@ class WeatherService {
     );
 
     if (response.statusCode == 200) {
-      return Weather.fromJson(jsonDecode(response.body));
+      final weather = Weather.fromJson(jsonDecode(response.body));
+      final pollution = await _getPollutionData(
+        weather.latitude,
+        weather.longitude,
+      );
+      final uv = await _getUvIndex(weather.latitude, weather.longitude);
+
+      return weather.copyWith(
+        aqi: pollution?['main']?['aqi'],
+        airComponents: (pollution?['components'] as Map<String, dynamic>?)?.map(
+          (k, v) => MapEntry(k, (v as num).toDouble()),
+        ),
+        uvIndex: uv,
+        moonPhase: MoonUtils.getMoonPhaseName(
+          MoonUtils.getMoonPhase(weather.localTime),
+        ),
+      );
     } else {
       throw Exception('Failed to load weather data');
     }
+  }
+
+  Future<Map<String, dynamic>?> _getPollutionData(
+    double lat,
+    double lon,
+  ) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'https://api.openweathermap.org/data/2.5/air_pollution?lat=$lat&lon=$lon&appid=$_apiKey',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // Returns the first item which has "main" and "components"
+        if (data['list'] != null && data['list'].isNotEmpty) {
+          return data['list'][0] as Map<String, dynamic>;
+        }
+      }
+    } catch (e) {
+      print('Failed to load Pollution Data: $e');
+    }
+    return null;
+  }
+
+  Future<double?> _getUvIndex(double lat, double lon) async {
+    try {
+      // Try One Call API (standard for UV)
+      final response = await http.get(
+        Uri.parse(
+          'https://api.openweathermap.org/data/2.5/onecall?lat=$lat&lon=$lon&exclude=minutely,hourly,daily,alerts&appid=$_apiKey&units=metric',
+        ),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return (data['current']['uvi'] as num).toDouble();
+      }
+    } catch (e) {
+      // Ignore, return null
+    }
+    return null;
   }
 
   Future<ForecastData> getForecast(double lat, double lon) async {
