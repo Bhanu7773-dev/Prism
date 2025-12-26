@@ -20,6 +20,16 @@ class WeatherWidgetMediumProvider : AppWidgetProvider() {
         }
     }
 
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        updateAppWidget(context, appWidgetManager, appWidgetId)
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+    }
+
     companion object {
         private const val PREFS_NAME = "HomeWidgetPreferences"
 
@@ -29,6 +39,10 @@ class WeatherWidgetMediumProvider : AppWidgetProvider() {
             appWidgetId: Int
         ) {
             val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+            
+            val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+            val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
 
             // Read weather data
             val temperature = prefs.getString("temperature", "--") ?: "--"
@@ -53,6 +67,24 @@ class WeatherWidgetMediumProvider : AppWidgetProvider() {
             // Set weather icon
             val iconRes = getWeatherIcon(condition.lowercase(), isNight)
             views.setImageViewResource(R.id.iv_weather_icon, iconRes)
+
+            // RESPONSIVENESS
+            
+            // Height logic
+            if (minHeight < 110) {
+                // Short: Hide bottom details (feels like, humidity)
+                views.setViewVisibility(R.id.medium_details_layout, android.view.View.GONE)
+            } else {
+                views.setViewVisibility(R.id.medium_details_layout, android.view.View.VISIBLE)
+            }
+
+            // Width logic
+            if (minWidth < 140) {
+                 // Narrow: Hide Condition text, keep icon
+                 views.setViewVisibility(R.id.tv_condition, android.view.View.GONE)
+            } else {
+                 views.setViewVisibility(R.id.tv_condition, android.view.View.VISIBLE)
+            }
 
             // Click to open app
             val intent = Intent(context, MainActivity::class.java)

@@ -18,10 +18,32 @@ class WeatherWidgetProvider : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
+        
+        // Trigger Persistent Notification Update
+        try {
+            val serviceIntent = Intent(context, WeatherNotificationService::class.java)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onEnabled(context: Context) {}
     override fun onDisabled(context: Context) {}
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        updateAppWidget(context, appWidgetManager, appWidgetId)
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+    }
 
     companion object {
         private const val PREFS_NAME = "HomeWidgetPreferences"
@@ -32,6 +54,10 @@ class WeatherWidgetProvider : AppWidgetProvider() {
             appWidgetId: Int
         ) {
             val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+
+            val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+            val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
 
             // Read weather data
             val temperature = prefs.getString("temperature", "--") ?: "--"
@@ -41,20 +67,21 @@ class WeatherWidgetProvider : AppWidgetProvider() {
 
             val views = RemoteViews(context.packageName, R.layout.weather_widget_small)
 
-            // Always use glass background
             views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.widget_bg_glass)
-
-            // Set temperature with degree symbol
             views.setTextViewText(R.id.tv_temperature, "${temperature}°")
-
-            // Set location
             views.setTextViewText(R.id.tv_location, location)
-
-            // Set weather icon (line style)
+            
             val iconRes = getWeatherIcon(condition.lowercase(), isNight)
             views.setImageViewResource(R.id.iv_weather_icon, iconRes)
 
-            // Click to open app
+            // RESPONSIVENESS
+            if (minWidth < 100) {
+                // Too narrow: Hide Location & Icon, just show Temp centered or start
+                views.setViewVisibility(R.id.weather_details_layout, android.view.View.GONE)
+            } else {
+                views.setViewVisibility(R.id.weather_details_layout, android.view.View.VISIBLE)
+            }
+
             val intent = Intent(context, MainActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(
                 context, 0, intent,

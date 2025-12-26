@@ -10,7 +10,7 @@ class MoonPhaseWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(24),
@@ -27,29 +27,33 @@ class MoonPhaseWidget extends StatelessWidget {
                 size: 20,
               ),
               const SizedBox(width: 8),
-              Text(
-                "MOON PHASE",
-                style: GoogleFonts.outfit(
-                  color: Colors.white54,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.0,
+              Flexible(
+                child: Text(
+                  "MOON PHASE",
+                  style: GoogleFonts.outfit(
+                    color: Colors.white54,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.0,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Center(
             child: Column(
               children: [
                 Icon(
                   _getMoonIcon(phaseName),
-                  size: 48,
+                  size: 32,
                   color: Colors.white.withOpacity(0.9),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
                   phaseName,
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
                     color: Colors.white,
                     fontSize: 18,

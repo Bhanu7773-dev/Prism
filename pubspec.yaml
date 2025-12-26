@@ -50,6 +50,8 @@ dependencies:
 
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
+  workmanager: ^0.9.0+3
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:

@@ -129,10 +129,10 @@ class _CelestialPathPainter extends CustomPainter {
     ..style = PaintingStyle.stroke
     ..strokeWidth = 2.0
     ..strokeCap = StrokeCap.round;
-  
+
   static final Paint _glowPaint = Paint()
     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-  
+
   static final Paint _moonPaint = Paint();
   static final Paint _shadowPaint = Paint();
   static final Paint _sunGlowPaint = Paint()
@@ -157,7 +157,7 @@ class _CelestialPathPainter extends CustomPainter {
     final arcHeight = height * 0.7;
     final bottomY = height * 0.8;
 
-    // 1. Draw the Arc Track
+    // Draw the Arc Track
     final path = Path();
     path.moveTo(0, bottomY);
     for (double x = 0; x <= width; x++) {
@@ -171,7 +171,7 @@ class _CelestialPathPainter extends CustomPainter {
     _trackPaint.shader = null;
     canvas.drawPath(path, _trackPaint);
 
-    // 2. Calculate Position using minutes since midnight
+    // Calculate Position using minutes since midnight
     double progress = 0.0;
 
     final sunriseMin = _toMinutes(sunrise);
@@ -199,7 +199,7 @@ class _CelestialPathPainter extends CustomPainter {
 
     progress = progress.clamp(0.0, 1.0);
 
-    // 3. Draw Active Path
+    // Draw Active Path
     final activePath = Path();
     activePath.moveTo(0, bottomY);
     for (double x = 0; x <= width * progress; x++) {
@@ -222,7 +222,7 @@ class _CelestialPathPainter extends CustomPainter {
 
     canvas.drawPath(activePath, _trackPaint..style = PaintingStyle.stroke);
 
-    // 4. Draw Celestial Body (Sun or Moon)
+    // Draw Celestial Body (Sun or Moon)
     final celestialX = width * progress;
     final celestialNormalizedY = 4 * progress * (1 - progress);
     final celestialY = bottomY - (celestialNormalizedY * arcHeight);
@@ -248,7 +248,11 @@ class _CelestialPathPainter extends CustomPainter {
 
       // Shadow circle (offset to create crescent) - clipped to moon bounds
       _shadowPaint.color = const Color(0xFF1a1a2e);
-      canvas.drawCircle(Offset(celestialX + 4, celestialY - 1), 6, _shadowPaint);
+      canvas.drawCircle(
+        Offset(celestialX + 4, celestialY - 1),
+        6,
+        _shadowPaint,
+      );
 
       canvas.restore();
     } else {
@@ -261,7 +265,7 @@ class _CelestialPathPainter extends CustomPainter {
       canvas.drawCircle(Offset(celestialX, celestialY), 6, _sunCorePaint);
     }
 
-    // 5. Draw Labels
+    // Draw Labels
     final textStyle = GoogleFonts.outfit(
       color: Colors.white.withOpacity(0.7),
       fontSize: 12,

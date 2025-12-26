@@ -2,12 +2,22 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
     <application
         android:label="Prism"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true">
+
+        <service
+            android:name=".WeatherNotificationService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -116,6 +126,18 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_forecast_info" />
+        </receiver>
+        <!-- AQI Widget Provider -->
+        <receiver
+            android:name=".AqiWidgetProvider"
+            android:label="Prism AQI"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_aqi_info" />
         </receiver>
     </application>
     <!-- Required to query activities that can process text, see:

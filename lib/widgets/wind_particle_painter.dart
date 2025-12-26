@@ -38,11 +38,11 @@ class WindParticlePainter extends CustomPainter {
     final speedScale = 0.25;
 
     for (var p in particles) {
-      // 1. Map Screen (x,y) -> Geo (lat,lon)
+      // Map Screen (x,y) -> Geo (lat,lon)
       double pLon = mapBounds.left + (p.x / size.width) * mapBounds.width;
       double pLat = mapBounds.top - (p.y / size.height) * mapBounds.height;
 
-      // 2. Fast Lookup (Bilinear Interpolation)
+      // Fast Lookup (Bilinear Interpolation)
       // Normalized Grid Coordinates [0..5]
       // Note: grid lat starts at latMin (South) and goes UP (Step > 0)?
       // Our loop was: latOffset = start + i*step. Start is neg, Step is pos.
@@ -87,7 +87,7 @@ class WindParticlePainter extends CustomPainter {
       double vTop = p10.v * (1 - fx) + p11.v * fx;
       double v = vBot * (1 - fy) + vTop * fy;
 
-      // 3. Move
+      // Move
       double dx = u * speedScale * p.speedVar;
       double dy = -v * speedScale * p.speedVar;
 
@@ -122,7 +122,7 @@ class WindParticlePainter extends CustomPainter {
         continue;
       }
 
-      // 4. Draw
+      // Draw
       if (p.history.length > 1) {
         double opacity = 0.5;
         if (p.age < 10) opacity *= (p.age / 10);

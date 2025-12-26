@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/notification_paper_cut_bg"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Top Section: Same as Collapsed (roughly) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <ImageView
+            android:id="@+id/notif_icon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_weather_sunny"
+            android:layout_marginEnd="16dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            
+            <LinearLayout 
+                android:layout_width="wrap_content" 
+                android:layout_height="wrap_content" 
+                android:orientation="horizontal"
+                android:gravity="bottom">
+                
+                <TextView
+                    android:id="@+id/notif_temp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="24°"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:includeFontPadding="false" />
+                    
+                 <TextView
+                    android:id="@+id/notif_condition"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sunny"
+                    android:textSize="14sp"
+                    android:textColor="#E0E0E0"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginBottom="6dp"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/notif_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="London"
+                android:textSize="14sp"
+                android:textColor="#B0B0B0" />
+        </LinearLayout>
+        
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="end">
+             <TextView
+                android:id="@+id/notif_high_low"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="H:28° L:18°"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+             <TextView
+                android:id="@+id/notif_updated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="10:00"
+                android:textSize="10sp"
+                android:textColor="#808080"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Hourly Forecast Row -->
+    <LinearLayout
+        android:id="@+id/hourly_forecast_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
+        
+    </LinearLayout>
+
+</LinearLayout>

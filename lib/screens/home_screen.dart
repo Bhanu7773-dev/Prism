@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
 import '../services/widget_service.dart';
@@ -38,8 +40,20 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchWeather();
+    _initialize();
     _sheetController.addListener(_onSheetMove);
+  }
+
+  Future<void> _initialize() async {
+    await _loadPreferences();
+    await _fetchWeather();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isCelsius = prefs.getBool('isCelsius') ?? true;
+    });
   }
 
   void _onSheetMove() {
@@ -63,8 +77,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchWeather() async {
     try {
-      // 1. Get permission
       LocationPermission permission = await Geolocator.checkPermission();
+
+      // Request Notification Permission (Android 13+)
+      if (await Permission.notification.isDenied) {
+        await Permission.notification.request();
+      }
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
@@ -85,13 +104,11 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      // 2. Get location (Try last known first for speed)
       Position? position = await Geolocator.getLastKnownPosition();
       position ??= await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // 3. Fetch all data in parallel
       final results = await Future.wait([
         _weatherService.getWeatherByCoordinates(
           position.latitude,
@@ -128,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
         weather,
         _locationName ?? weather.cityName,
         forecast: forecast,
+        isCelsius: _isCelsius,
       );
     } catch (e) {
       setState(() {
@@ -174,7 +192,6 @@ class _HomeScreenState extends State<HomeScreen> {
       resizeToAvoidBottomInset: false, // Prevent keyboard push
       body: Stack(
         children: [
-          // 1. Background with dynamic day/night based on selected city
           LayeredBackground(
             sunrise: _weather?.sunrise,
             sunset: _weather?.sunset,
@@ -201,7 +218,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             )
           else ...[
-            // 4. The Glass Sheet (Bottom) - Now behind the pills
             Visibility(
               visible: _isSheetVisible,
               maintainState:
@@ -210,6 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 controller: _sheetController,
                 forecastData: _forecastData,
                 currentWeather: _weather,
+                isCelsius: _isCelsius,
               ),
             ),
 
@@ -251,7 +268,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 return Stack(
                   children: [
-                    // 3. Condition Text (Fades out in place)
                     Positioned(
                       top: startTop + 130, // Position below the temperature
                       left: 0,
@@ -279,7 +295,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
-                    // 5. Location Pill (Top Center) - Always Visible & On Top
                     Positioned(
                       top: 50,
                       left: 0,
@@ -343,7 +358,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
-                    // 6. Animated Weather Hero (Temp Only) - On Top
                     // We move this from center to top-left
                     Positioned(
                       top: lerpDouble(startTop, endTop, t), // Move up
@@ -513,9 +527,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               GestureDetector(
-                                onTap: () {
+                                onTap: () async {
                                   setSheetState(() {});
                                   setState(() => _isCelsius = true);
+                                  final prefs =
+                                      await SharedPreferences.getInstance();
+                                  await prefs.setBool('isCelsius', true);
+                                  if (_weather != null) {
+                                    WidgetService.updateWidgetData(
+                                      _weather!,
+                                      _locationName ?? _weather!.cityName,
+                                      forecast: _forecastData,
+                                      isCelsius: true,
+                                    );
+                                  }
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
@@ -540,9 +565,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () {
+                                onTap: () async {
                                   setSheetState(() {});
                                   setState(() => _isCelsius = false);
+                                  final prefs =
+                                      await SharedPreferences.getInstance();
+                                  await prefs.setBool('isCelsius', false);
+                                  if (_weather != null) {
+                                    WidgetService.updateWidgetData(
+                                      _weather!,
+                                      _locationName ?? _weather!.cityName,
+                                      forecast: _forecastData,
+                                      isCelsius: false,
+                                    );
+                                  }
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(

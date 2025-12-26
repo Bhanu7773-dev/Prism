@@ -20,6 +20,16 @@ class WindWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        updateAppWidget(context, appWidgetManager, appWidgetId)
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+    }
+
     companion object {
         private const val PREFS_NAME = "HomeWidgetPreferences"
 
@@ -29,6 +39,10 @@ class WindWidgetProvider : AppWidgetProvider() {
             appWidgetId: Int
         ) {
             val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+
+            val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+            val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
 
             val windSpeed = prefs.getString("windSpeed", "--") ?: "--"
 
@@ -37,6 +51,13 @@ class WindWidgetProvider : AppWidgetProvider() {
             views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.widget_bg_glass)
             views.setTextViewText(R.id.tv_wind_speed, windSpeed)
 
+            // RESPONSIVENESS
+            if (minWidth < 90) {
+                 views.setViewVisibility(R.id.tv_wind_unit, android.view.View.GONE)
+            } else {
+                 views.setViewVisibility(R.id.tv_wind_unit, android.view.View.VISIBLE)
+            }
+            
             // Click to open app
             val intent = Intent(context, MainActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(

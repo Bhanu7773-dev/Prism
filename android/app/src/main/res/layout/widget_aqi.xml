@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@drawable/widget_bg_glass">
+
+    <!-- Header: Icon & Title -->
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:alpha="0.7">
+
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_weather_cloudy" 
+            android:layout_marginEnd="6dp" 
+            android:contentDescription="Air Icon"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AIR QUALITY"
+            android:textSize="10sp"
+            android:textColor="#CCFFFFFF"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.1"
+            android:includeFontPadding="false" />
+    </LinearLayout>
+
+    <!-- Main AQI Value -->
+    <TextView
+        android:id="@+id/tv_aqi_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="0dp"
+        android:text="42"
+        android:textSize="40sp"
+        android:textColor="#FFFFFF"
+        android:fontFamily="sans-serif-thin"
+        android:includeFontPadding="false" />
+
+    <!-- Description & PM2.5 (Right Aligned) -->
+    <LinearLayout
+        android:id="@+id/aqi_details_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:orientation="vertical"
+        android:gravity="end">
+
+        <TextView
+            android:id="@+id/tv_aqi_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GOOD"
+            android:textSize="14sp"
+            android:textColor="#00E400"
+            android:fontFamily="sans-serif-black"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:id="@+id/tv_aqi_pm25"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="PM2.5: 12"
+            android:textSize="10sp"
+            android:textColor="#80FFFFFF"
+            android:fontFamily="sans-serif" />
+    </LinearLayout>
+
+    <!-- Progress Bar at Bottom -->
+    <ProgressBar
+        android:id="@+id/progress_aqi"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="2dp"
+        android:max="300"
+        android:progress="50"
+        android:progressDrawable="@drawable/aqi_progress_drawable" 
+        android:indeterminate="false" /> 
+        
+</RelativeLayout>

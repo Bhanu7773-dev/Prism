@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Base Layer: Deep Night/Blue Background -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="90"
+                android:startColor="#0D1B2A"
+                android:endColor="#1B263B"
+                android:type="linear" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+
+    <!-- Mid Layer: Soft Curve -->
+    <item android:top="24dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#2C3E50" /> <!-- Fallback color -->
+             <gradient
+                android:angle="45"
+                android:startColor="#1E2A3A"
+                android:endColor="#30475E"
+                android:type="linear"/>
+            <corners 
+                android:bottomLeftRadius="16dp" 
+                android:bottomRightRadius="16dp" 
+                android:topLeftRadius="80dp" 
+                android:topRightRadius="0dp" />
+        </shape>
+    </item>
+
+    <!-- Top Front Layer: Another Curve -->
+    <item android:top="40dp" android:right="20dp">
+         <shape android:shape="rectangle">
+            <gradient
+                android:angle="135"
+                android:startColor="#34495E"
+                android:endColor="#5D6D7E"
+                android:type="linear"/>
+            <corners 
+                android:bottomLeftRadius="16dp" 
+                android:bottomRightRadius="16dp" 
+                android:topLeftRadius="120dp" 
+                android:topRightRadius="0dp"/>
+        </shape>
+    </item>
+    
+    <!-- Ideally we use vector path data for real curves but shapes with rounded corners approximate hills -->
+    
+</layer-list>

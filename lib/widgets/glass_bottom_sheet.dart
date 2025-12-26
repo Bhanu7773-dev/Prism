@@ -20,12 +20,14 @@ class GlassBottomSheet extends StatelessWidget {
   final ForecastData? forecastData;
   final Weather? currentWeather;
   final DraggableScrollableController? controller;
+  final bool isCelsius;
 
   const GlassBottomSheet({
     super.key,
     this.forecastData,
     this.currentWeather,
     this.controller,
+    this.isCelsius = true,
   });
 
   @override
@@ -172,7 +174,7 @@ class GlassBottomSheet extends StatelessWidget {
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
-                                            "${item.temperature.round()}°",
+                                            "${_getTemp(item.temperature).round()}°",
                                             style: GoogleFonts.outfit(
                                               color: Colors.white,
                                               fontWeight: FontWeight.bold,
@@ -196,8 +198,10 @@ class GlassBottomSheet extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: FeelsLikeCard(
-                                    temp: currentWeather!.temperature,
-                                    feelsLike: currentWeather!.feelsLike,
+                                    temp: _getTemp(currentWeather!.temperature),
+                                    feelsLike: _getTemp(
+                                      currentWeather!.feelsLike,
+                                    ),
                                     humidity: currentWeather!.humidity
                                         .toDouble(),
                                     windSpeed: currentWeather!.windSpeed,
@@ -237,7 +241,7 @@ class GlassBottomSheet extends StatelessWidget {
                                 children: [
                                   _buildDetailItem(
                                     "Feels Like",
-                                    "${currentWeather!.feelsLike.round()}°",
+                                    "${_getTemp(currentWeather!.feelsLike).round()}°",
                                     Icons.thermostat,
                                     itemWidth,
                                   ),
@@ -368,14 +372,19 @@ class GlassBottomSheet extends StatelessWidget {
                                             CutoutIcon(
                                               icon: Icons.water_drop,
                                               size: 12,
-                                              color: Colors.blue[200]!,
+                                              color: Colors.white.withOpacity(
+                                                0.7,
+                                              ),
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
                                               "${item.humidity}%",
                                               style: GoogleFonts.outfit(
-                                                color: Colors.blue[200],
+                                                color: Colors.white.withOpacity(
+                                                  0.7,
+                                                ),
                                                 fontSize: 12,
+                                                fontWeight: FontWeight.w500,
                                               ),
                                             ),
                                           ],
@@ -388,7 +397,7 @@ class GlassBottomSheet extends StatelessWidget {
                                         SizedBox(
                                           width: 50,
                                           child: Text(
-                                            "${item.temperature.round()}°",
+                                            "${_getTemp(item.temperature).round()}°",
                                             textAlign: TextAlign.end,
                                             style: GoogleFonts.outfit(
                                               color: Colors.white,
@@ -504,5 +513,9 @@ class GlassBottomSheet extends StatelessWidget {
     // Use ThemeUtils to ensure perfect match with background scenery
     final phase = ThemeUtils.getTimeOfDay(now, sunrise, sunset);
     return ThemeUtils.getGlassGradient(phase);
+  }
+
+  double _getTemp(double celsius) {
+    return isCelsius ? celsius : (celsius * 9 / 5) + 32;
   }
 }

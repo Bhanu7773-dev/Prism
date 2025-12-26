@@ -20,6 +20,16 @@ class SunPathWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        updateAppWidget(context, appWidgetManager, appWidgetId)
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+    }
+
     companion object {
         private const val PREFS_NAME = "HomeWidgetPreferences"
 
@@ -29,6 +39,9 @@ class SunPathWidgetProvider : AppWidgetProvider() {
             appWidgetId: Int
         ) {
             val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+
+            val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
 
             val sunrise = prefs.getString("sunrise", "06:00") ?: "06:00"
             val sunset = prefs.getString("sunset", "18:00") ?: "18:00"
@@ -38,6 +51,22 @@ class SunPathWidgetProvider : AppWidgetProvider() {
             views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.widget_bg_glass)
             views.setTextViewText(R.id.tv_sunrise, sunrise)
             views.setTextViewText(R.id.tv_sunset, sunset)
+
+            // RESPONSIVENESS
+            if (minWidth < 110) {
+                // Hide center icon if tight
+                 views.setViewVisibility(R.id.icon_sun, android.view.View.GONE)
+            } else {
+                 views.setViewVisibility(R.id.icon_sun, android.view.View.VISIBLE)
+            }
+
+            if (minWidth < 70) {
+                // If super tight, hide Sunrise, keep Sunset (usually next event interest)
+                // In a perfect world we'd check time and show next event.
+                views.setViewVisibility(R.id.layout_sunrise, android.view.View.GONE)
+            } else {
+                views.setViewVisibility(R.id.layout_sunrise, android.view.View.VISIBLE)
+            }
 
             // Click to open app
             val intent = Intent(context, MainActivity::class.java)

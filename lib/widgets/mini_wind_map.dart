@@ -40,7 +40,7 @@ class _MiniWindMapState extends State<MiniWindMap>
   void initState() {
     super.initState();
     // More particles for mini map detail
-    for (int i = 0; i < 300; i++)
+    for (int i = 0; i < 150; i++)
       _particles.add(Particle()..life = 20 + Random().nextInt(80));
 
     _animationController = AnimationController(
@@ -117,119 +117,122 @@ class _MiniWindMapState extends State<MiniWindMap>
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-            // 1. Map
-            FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: LatLng(widget.latitude, widget.longitude),
-                initialZoom: 3.0,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.none,
-                ), // Static
-                onMapReady: () {
-                  // Once map is ready, we can get bounds if needed,
-                  // but for now we just rely on grid fetching done in init.
-                  // To get accurate bounds for painter, we need the map controller's bounds.
-                  _updateBounds();
-                },
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate:
-                      'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
-                  subdomains: const ['a', 'b', 'c', 'd'],
-                  userAgentPackageName: 'com.dark.prism.mini',
+
+            RepaintBoundary(
+              child: FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: LatLng(widget.latitude, widget.longitude),
+                  initialZoom: 3.0,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.none,
+                  ), // Static
+                  onMapReady: () {
+                    // Once map is ready, we can get bounds if needed,
+                    // but for now we just rely on grid fetching done in init.
+                    // To get accurate bounds for painter, we need the map controller's bounds.
+                    _updateBounds();
+                  },
                 ),
-                // Labels (Simple Bright)
-                ColorFiltered(
-                  colorFilter: const ColorFilter.matrix([
-                    1.3,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    1.3,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    1.3,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    1,
-                    0,
-                  ]),
-                  child: TileLayer(
+                children: [
+                  TileLayer(
                     urlTemplate:
-                        'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+                        'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
                     subdomains: const ['a', 'b', 'c', 'd'],
                     userAgentPackageName: 'com.dark.prism.mini',
                   ),
-                ),
+                  // Labels (Simple Bright)
+                  ColorFiltered(
+                    colorFilter: const ColorFilter.matrix([
+                      1.3,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1.3,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1.3,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      0,
+                    ]),
+                    child: TileLayer(
+                      urlTemplate:
+                          'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+                      subdomains: const ['a', 'b', 'c', 'd'],
+                      userAgentPackageName: 'com.dark.prism.mini',
+                    ),
+                  ),
 
-                // Marker (Location Dot)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(widget.latitude, widget.longitude),
-                      width: 20,
-                      height: 20,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.blueAccent,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.5),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                            ),
-                          ],
+                  // Marker (Location Dot)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: LatLng(widget.latitude, widget.longitude),
+                        width: 20,
+                        height: 20,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.blueAccent,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.5),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            // 2. Particles
-            IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _animationController,
-                builder: (context, child) {
-                  // Update bounds if controller valid
-                  if (_windGrid != null) {
-                    final bounds = _mapController.camera.visibleBounds;
-                    _mapBounds = Rect.fromLTWH(
-                      bounds.west,
-                      bounds.north,
-                      bounds.east - bounds.west,
-                      bounds.north - bounds.south,
-                    );
-                  }
-
-                  return CustomPaint(
-                    size: MediaQuery.of(context).size,
-                    painter: WindParticlePainter(
-                      particles: _particles,
-                      windGrid: _windGrid,
-                      mapBounds: _mapBounds,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  );
-                },
+                    ],
+                  ),
+                ],
               ),
             ),
 
-            // 3. Overlay Title & Expand Icon
-            Positioned(
+
+            RepaintBoundary(
+              child: IgnorePointer(
+                child: AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context, child) {
+                    // Update bounds if controller valid
+                    if (_windGrid != null) {
+                      final bounds = _mapController.camera.visibleBounds;
+                      _mapBounds = Rect.fromLTWH(
+                        bounds.west,
+                        bounds.north,
+                        bounds.east - bounds.west,
+                        bounds.north - bounds.south,
+                      );
+                    }
+
+                    return CustomPaint(
+                      size: MediaQuery.of(context).size,
+                      painter: WindParticlePainter(
+                        particles: _particles,
+                        windGrid: _windGrid,
+                        mapBounds: _mapBounds,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+
               top: 12,
               left: 12,
               child: Container(

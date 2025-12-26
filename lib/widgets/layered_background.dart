@@ -200,26 +200,24 @@ class _LayeredBackgroundState extends State<LayeredBackground>
 
         return Stack(
           children: [
-            // 1. Animated Sky Gradient with smooth color transitions
             RepaintBoundary(child: _buildAnimatedSky(skyColors)),
 
-            // 2. Stars (visible during night and fading during sunrise)
             if (showStars && starsOpacity > 0)
               Positioned.fill(
-                child: Opacity(
-                  opacity: starsOpacity.clamp(0.0, 1.0),
-                  child: CustomPaint(
-                    painter: StarsPainter(
-                      twinkleValue: _parallaxController.value,
+                child: RepaintBoundary(
+                  child: Opacity(
+                    opacity: starsOpacity.clamp(0.0, 1.0),
+                    child: CustomPaint(
+                      painter: StarsPainter(
+                        twinkleValue: _parallaxController.value,
+                      ),
                     ),
                   ),
                 ),
               ),
 
-            // 3. Horizon glow for sunrise/sunset
             _buildHorizonGlow(size, t),
 
-            // 4. Far Clouds (Slowest parallax)
             Positioned(
               top: 80,
               left:
@@ -229,13 +227,10 @@ class _LayeredBackgroundState extends State<LayeredBackground>
               child: _buildCloud(100, 0.6, cloudColor),
             ),
 
-            // 5. Sun (animated position and opacity)
             _buildAnimatedSun(size, parallaxOffset),
 
-            // 6. Moon (animated position and opacity)
             _buildAnimatedMoon(size, parallaxOffset),
 
-            // 7. Middle Clouds (Medium parallax)
             Positioned(
               top: 200,
               right:
@@ -245,7 +240,6 @@ class _LayeredBackgroundState extends State<LayeredBackground>
               child: _buildCloud(160, 0.5, cloudColor),
             ),
 
-            // 8. Weather Particles (Rain/Snow/Cold effects)
             if (widget.weatherCondition != null ||
                 (widget.temperature != null && widget.temperature! < 2) ||
                 (widget.humidity != null && widget.humidity! > 80) ||
@@ -265,7 +259,6 @@ class _LayeredBackgroundState extends State<LayeredBackground>
                 ),
               ),
 
-            // 9. Near Clouds (Fastest parallax)
             Positioned(
               top: 320,
               left:
@@ -274,8 +267,6 @@ class _LayeredBackgroundState extends State<LayeredBackground>
                   (_parallaxController.value * 35),
               child: _buildCloud(180, 0.3, cloudColor),
             ),
-
-            // 10. Parallax Scenery (Mountains removed for performance)
           ],
         );
       },
@@ -373,7 +364,7 @@ class _LayeredBackgroundState extends State<LayeredBackground>
         duration: const Duration(milliseconds: 1200),
         curve: Curves.easeInOut,
         opacity: _targetIsNight ? 0.0 : 1.0,
-        child: _buildSun(isLowSun: isLowSun),
+        child: RepaintBoundary(child: _buildSun(isLowSun: isLowSun)),
       ),
     );
   }
@@ -398,7 +389,7 @@ class _LayeredBackgroundState extends State<LayeredBackground>
         duration: const Duration(milliseconds: 1200),
         curve: Curves.easeInOut,
         opacity: _targetIsNight ? 1.0 : 0.0,
-        child: _buildMoon(),
+        child: RepaintBoundary(child: _buildMoon()),
       ),
     );
   }
@@ -544,19 +535,21 @@ class _LayeredBackgroundState extends State<LayeredBackground>
   }
 
   Widget _buildCloud(double width, double opacity, Color color) {
-    return Container(
-      width: width,
-      height: width * 0.5,
-      decoration: BoxDecoration(
-        color: color.withOpacity(opacity),
-        borderRadius: BorderRadius.circular(width / 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            offset: const Offset(5, 5),
-            blurRadius: 8,
-          ),
-        ],
+    return RepaintBoundary(
+      child: Container(
+        width: width,
+        height: width * 0.5,
+        decoration: BoxDecoration(
+          color: color.withOpacity(opacity),
+          borderRadius: BorderRadius.circular(width / 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              offset: const Offset(5, 5),
+              blurRadius: 8,
+            ),
+          ],
+        ),
       ),
     );
   }

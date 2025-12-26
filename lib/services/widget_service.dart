@@ -1,5 +1,7 @@
+import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
 import '../models/weather_model.dart';
+import '../utils/aqi_utils.dart';
 
 /// Service to update home screen widget with weather data
 class WidgetService {
@@ -11,8 +13,12 @@ class WidgetService {
     Weather weather,
     String locationName, {
     ForecastData? forecast,
+    bool isCelsius = true,
   }) async {
     try {
+      // Helper to convert temperature
+      double toTemp(double c) => isCelsius ? c : (c * 9 / 5) + 32;
+
       // Calculate day phase based on current time
       final now = weather.localTime;
       final hour = now.hour;
@@ -31,13 +37,13 @@ class WidgetService {
       // Save weather data to shared storage
       await HomeWidget.saveWidgetData<String>(
         'temperature',
-        weather.temperature.round().toString(),
+        toTemp(weather.temperature).round().toString(),
       );
       await HomeWidget.saveWidgetData<String>('condition', weather.condition);
       await HomeWidget.saveWidgetData<String>('location', locationName);
       await HomeWidget.saveWidgetData<String>(
         'feelsLike',
-        weather.feelsLike.round().toString(),
+        toTemp(weather.feelsLike).round().toString(),
       );
       await HomeWidget.saveWidgetData<String>(
         'humidity',
@@ -78,6 +84,8 @@ class WidgetService {
 
       // Forecast data for 5 days
       if (forecast != null && forecast.list.isNotEmpty) {
+        // ... (Existing Daily Forecast Logic - KEEP IT) ...
+
         // Group by day to get daily high/low
         Map<String, List<ForecastItem>> dailyForecasts = {};
         for (var item in forecast.list) {
@@ -116,13 +124,53 @@ class WidgetService {
           );
           await HomeWidget.saveWidgetData<String>(
             'day${savedCount}_temp',
-            '${maxTemp.round()}°/${minTemp.round()}°',
+            '${toTemp(maxTemp).round()}°/${toTemp(minTemp).round()}°',
           );
           await HomeWidget.saveWidgetData<String>(
             'day${savedCount}_condition',
             firstItem.condition,
           );
         }
+
+        // Hourly Forecast Data (Next 5 items)
+        int hourlyCount = 0;
+        for (var item in forecast.list) {
+          // Skip if item is before current time (optional, but API usually returns future/current)
+          // Just take first 5
+          if (hourlyCount >= 5) break;
+
+          await HomeWidget.saveWidgetData<String>(
+            'hourly${hourlyCount}_time',
+            '${item.dateTime.hour.toString().padLeft(2, '0')}:00',
+          );
+          await HomeWidget.saveWidgetData<String>(
+            'hourly${hourlyCount}_temp',
+            '${toTemp(item.temperature).round()}°',
+          );
+          await HomeWidget.saveWidgetData<String>(
+            'hourly${hourlyCount}_condition',
+            item.condition,
+          );
+
+          hourlyCount++;
+        }
+      }
+
+      // AQI data
+      if (weather.airComponents != null) {
+        final pm25 = weather.airComponents!['pm2_5'] ?? 0.0;
+        final aqi = AqiUtils.calculateAQI(pm25);
+        final description = AqiUtils.getAqiDescription(aqi);
+        // We'll save color as a hex string for the Android side to parse, or just save the AQI
+        // and let Android logic handle color. Saving mapped values is safer.
+        // Let's safe the int value which is safest for platform interaction.
+
+        await HomeWidget.saveWidgetData<int>('aqi_value', aqi);
+        await HomeWidget.saveWidgetData<String>('aqi_description', description);
+        await HomeWidget.saveWidgetData<String>(
+          'aqi_pm25',
+          pm25.round().toString(),
+        );
       }
 
       await HomeWidget.saveWidgetData<String>(
@@ -155,8 +203,23 @@ class WidgetService {
         androidName: 'ForecastWidgetProvider',
         qualifiedAndroidName: 'com.dark.prism.ForecastWidgetProvider',
       );
+      await HomeWidget.updateWidget(
+        androidName: 'AqiWidgetProvider',
+        qualifiedAndroidName: 'com.dark.prism.AqiWidgetProvider',
+      );
+
+      // Notification update is now triggered by Native Provider (WeatherWidgetProvider)
+      // to avoid MissingPluginException in background isolate.
+
+      // Explicitly trigger notification service for "Instant" update while app is running
+      try {
+        const channel = MethodChannel('com.dark.prism/widget');
+        await channel.invokeMethod('updateNotificationService');
+      } catch (e) {
+        print('Failed to invoke notification channel: $e');
+      }
     } catch (e) {
-      // Widget update failed silently - don't crash the app
+      print('Widget update failed: $e');
     }
   }
 
