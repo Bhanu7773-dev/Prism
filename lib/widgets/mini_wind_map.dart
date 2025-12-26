@@ -117,7 +117,6 @@ class _MiniWindMapState extends State<MiniWindMap>
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-
             RepaintBoundary(
               child: FlutterMap(
                 mapController: _mapController,
@@ -201,7 +200,6 @@ class _MiniWindMapState extends State<MiniWindMap>
               ),
             ),
 
-
             RepaintBoundary(
               child: IgnorePointer(
                 child: AnimatedBuilder(
@@ -232,7 +230,7 @@ class _MiniWindMapState extends State<MiniWindMap>
               ),
             ),
 
-
+            Positioned(
               top: 12,
               left: 12,
               child: Container(

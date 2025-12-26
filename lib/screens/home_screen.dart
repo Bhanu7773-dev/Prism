@@ -13,6 +13,7 @@ import '../widgets/layered_background.dart';
 import '../widgets/glass_bottom_sheet.dart';
 import '../widgets/glass_container.dart';
 import 'wind_map_screen.dart';
+import 'update_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -669,11 +670,31 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // App Version
                       _buildSettingsTile(
                         icon: Icons.info_outline,
                         title: 'App Version',
-                        subtitle: 'v1.0.0',
+                        subtitle: 'v1.0.3',
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Check for Updates
+                      _buildSettingsTile(
+                        icon: Icons.system_update,
+                        title: 'Check for Updates',
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white.withOpacity(0.5),
+                          size: 16,
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const UpdateScreen(),
+                            ),
+                          );
+                        },
                       ),
 
                       SizedBox(
