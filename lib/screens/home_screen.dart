@@ -6,12 +6,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
 import '../services/widget_service.dart';
 import '../widgets/layered_background.dart';
 import '../widgets/glass_bottom_sheet.dart';
 import '../widgets/glass_container.dart';
+import '../widgets/location_picker_map.dart';
 import 'wind_map_screen.dart';
 import 'update_screen.dart';
 
@@ -55,6 +57,16 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _isCelsius = prefs.getBool('isCelsius') ?? true;
     });
+
+    // Load saved custom location if it exists
+    final savedLat = prefs.getDouble('customLocationLat');
+    final savedLon = prefs.getDouble('customLocationLon');
+    final savedLocationName = prefs.getString('customLocationName');
+
+    if (savedLat != null && savedLon != null && savedLocationName != null) {
+      // User has a saved custom location, use it instead of current location
+      await _selectLocationFromCoords(savedLat, savedLon, savedLocationName);
+    }
   }
 
   void _onSheetMove() {
@@ -634,8 +646,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           Icons.chevron_right,
                           color: Colors.white.withOpacity(0.5),
                         ),
-                        onTap: () {
+                        onTap: () async {
                           Navigator.pop(context);
+                          await _clearCustomLocation();
                           _fetchWeather();
                         },
                       ),
@@ -673,7 +686,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildSettingsTile(
                         icon: Icons.info_outline,
                         title: 'App Version',
-                        subtitle: 'v1.0.3',
+                        subtitle: 'v1.0.4',
                       ),
                       const SizedBox(height: 16),
 
@@ -824,78 +837,138 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Drag Handle
-                        Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        Text(
-                          'Search Location',
-                          style: GoogleFonts.outfit(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Search Field
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Drag Handle
+                          Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(2),
                             ),
                           ),
-                          child: TextField(
-                            controller: searchController,
-                            style: GoogleFonts.outfit(color: Colors.white),
-                            autofocus: true,
-                            decoration: InputDecoration(
-                              hintText: 'Enter city name...',
-                              hintStyle: GoogleFonts.outfit(
-                                color: Colors.white.withOpacity(0.5),
+                          const SizedBox(height: 24),
+
+                          Text(
+                            'Search Location',
+                            style: GoogleFonts.outfit(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Select on Map Button
+                          GestureDetector(
+                            onTap: () async {
+                              Navigator.pop(context); // Close search sheet
+                              // Pass current weather location to map
+                              final currentLoc = _weather != null
+                                  ? LatLng(
+                                      _weather!.latitude,
+                                      _weather!.longitude,
+                                    )
+                                  : null;
+                              final result = await Navigator.push<dynamic>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => LocationPickerMap(
+                                    currentLocation: currentLoc,
+                                  ),
+                                ),
+                              );
+                              if (result != null && result is LatLng) {
+                                // result is a LatLng, reverse geocode it
+                                await _handleMapSelection(result);
+                              }
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.blue.withOpacity(0.5),
+                                ),
                               ),
-                              prefixIcon: Icon(
-                                Icons.search,
-                                color: Colors.white.withOpacity(0.6),
+                              child: Center(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.map,
+                                      color: Colors.blue[200],
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Select on Map',
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.blue[200],
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              suffixIcon: isSearching
-                                  ? Padding(
-                                      padding: const EdgeInsets.all(12),
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Search Field
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                              ),
+                            ),
+                            child: TextField(
+                              controller: searchController,
+                              style: GoogleFonts.outfit(color: Colors.white),
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                hintText: 'Enter city name...',
+                                hintStyle: GoogleFonts.outfit(
+                                  color: Colors.white.withOpacity(0.5),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  color: Colors.white.withOpacity(0.6),
+                                ),
+                                suffixIcon: isSearching
+                                    ? Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white.withOpacity(0.6),
+                                          ),
+                                        ),
+                                      )
+                                    : searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(
+                                          Icons.clear,
                                           color: Colors.white.withOpacity(0.6),
                                         ),
-                                      ),
-                                    )
-                                  : searchController.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: Icon(
-                                        Icons.clear,
-                                        color: Colors.white.withOpacity(0.6),
-                                      ),
-                                      onPressed: () {
-                                        searchController.clear();
-                                        setSheetState(() {
-                                          suggestions = [];
-                                        });
-                                      },
-                                    )
-                                  : null,
+                                        onPressed: () {
+                                          searchController.clear();
+                                          setSheetState(() {
+                                            suggestions = [];
+                                          });
+                                        },
+                                      )
+                                    : null,
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.all(16),
                             ),
@@ -1032,7 +1105,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(
                           height: MediaQuery.of(context).padding.bottom + 16,
                         ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1128,4 +1202,109 @@ class _HomeScreenState extends State<HomeScreen> {
       return '${((celsius * 9 / 5) + 32).round()}';
     }
   }
+
+  Future<void> _handleMapSelection(LatLng selectedCoords) async {
+    setState(() => _isLoading = true);
+
+    try {
+      // Reverse geocode the coordinates to get the location name
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        selectedCoords.latitude,
+        selectedCoords.longitude,
+      );
+
+      String locationName = 'Unknown Location';
+      if (placemarks.isNotEmpty) {
+        final placemark = placemarks.first;
+        locationName =
+            placemark.locality ??
+            placemark.subAdministrativeArea ??
+            placemark.administrativeArea ??
+            'Unknown';
+      }
+
+      // Fetch weather for selected coordinates
+      final results = await Future.wait([
+        _weatherService.getWeatherByCoordinates(
+          selectedCoords.latitude,
+          selectedCoords.longitude,
+        ),
+        _weatherService.getForecast(
+          selectedCoords.latitude,
+          selectedCoords.longitude,
+        ),
+      ]);
+
+      final weather = results[0] as Weather;
+      final forecast = results[1] as ForecastData;
+
+      setState(() {
+        _weather = weather;
+        _forecastData = forecast;
+        _locationName = locationName;
+        _isLoading = false;
+      });
+
+      // Save custom location persistently
+      await _saveCustomLocation(
+        selectedCoords.latitude,
+        selectedCoords.longitude,
+        locationName,
+      );
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load weather for selected location';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveCustomLocation(
+    double latitude,
+    double longitude,
+    String locationName,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('customLocationLat', latitude);
+    await prefs.setDouble('customLocationLon', longitude);
+    await prefs.setString('customLocationName', locationName);
+  }
+
+  Future<void> _selectLocationFromCoords(
+    double latitude,
+    double longitude,
+    String locationName,
+  ) async {
+    setState(() => _isLoading = true);
+
+    try {
+      final results = await Future.wait([
+        _weatherService.getWeatherByCoordinates(latitude, longitude),
+        _weatherService.getForecast(latitude, longitude),
+      ]);
+
+      final weather = results[0] as Weather;
+      final forecast = results[1] as ForecastData;
+
+      setState(() {
+        _weather = weather;
+        _forecastData = forecast;
+        _locationName = locationName;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load weather';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _clearCustomLocation() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('customLocationLat');
+    await prefs.remove('customLocationLon');
+    await prefs.remove('customLocationName');
+  }
 }
+

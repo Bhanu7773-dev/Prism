@@ -81,7 +81,7 @@ class UpdateService {
               changelog:
                   (data['body'] != null && data['body'].toString().isNotEmpty)
                   ? data['body']
-                  : 'Developer didn\'t specify',
+                  : 'Developer didn\'t specified',
               downloadUrl: apkAsset['browser_download_url'],
               fileName: apkAsset['name'],
             );
