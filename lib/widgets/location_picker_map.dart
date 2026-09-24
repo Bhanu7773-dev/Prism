@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../api_keys.dart';
 
 class LocationPickerMap extends StatefulWidget {
   final LatLng? initialCenter;
@@ -73,7 +74,7 @@ class _LocationPickerMapState extends State<LocationPickerMap> {
               // Single optimized tile layer - dark theme
               TileLayer(
                 urlTemplate:
-                    'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+                    'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=${ApiKeys.carto}',
                 subdomains: const ['a', 'b', 'c', 'd'],
                 userAgentPackageName: 'com.dark.prism',
                 maxZoom: 19,
@@ -85,7 +86,7 @@ class _LocationPickerMapState extends State<LocationPickerMap> {
               // Labels layer - lightweight without heavy filtering
               TileLayer(
                 urlTemplate:
-                    'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+                    'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png?key=${ApiKeys.carto}',
                 subdomains: const ['a', 'b', 'c', 'd'],
                 userAgentPackageName: 'com.dark.prism',
                 maxZoom: 19,

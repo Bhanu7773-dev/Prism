@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -686,7 +687,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildSettingsTile(
                         icon: Icons.info_outline,
                         title: 'App Version',
-                        subtitle: 'v1.0.4',
+                        subtitle: 'v1.0.5',
                       ),
                       const SizedBox(height: 16),
 
@@ -803,6 +804,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final searchController = TextEditingController();
       List<CityResult> suggestions = [];
       bool isSearching = false;
+      Timer? debounceTimer;
 
       showModalBottomSheet(
         context: context,
@@ -837,10 +839,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                           // Drag Handle
                           Container(
                             width: 40,
@@ -962,9 +963,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                           color: Colors.white.withOpacity(0.6),
                                         ),
                                         onPressed: () {
+                                          debounceTimer?.cancel();
                                           searchController.clear();
                                           setSheetState(() {
                                             suggestions = [];
+                                            isSearching = false;
                                           });
                                         },
                                       )
@@ -972,26 +975,37 @@ class _HomeScreenState extends State<HomeScreen> {
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.all(16),
                             ),
-                            onChanged: (value) async {
-                              if (value.length >= 2) {
+                            onChanged: (value) {
+                              debounceTimer?.cancel();
+                              final trimmed = value.trim();
+                              if (trimmed.length >= 2) {
                                 setSheetState(() => isSearching = true);
-                                try {
-                                  final results = await _weatherService
-                                      .searchCities(value);
-                                  setSheetState(() {
-                                    suggestions = results;
-                                    isSearching = false;
-                                  });
-                                } catch (e) {
-                                  setSheetState(() => isSearching = false);
-                                }
+                                debounceTimer = Timer(
+                                  const Duration(milliseconds: 300),
+                                  () async {
+                                    try {
+                                      final results = await _weatherService
+                                          .searchCities(trimmed);
+                                      if (!context.mounted) return;
+                                      setSheetState(() {
+                                        suggestions = results;
+                                        isSearching = false;
+                                      });
+                                    } catch (e) {
+                                      if (!context.mounted) return;
+                                      setSheetState(() => isSearching = false);
+                                    }
+                                  },
+                                );
                               } else {
                                 setSheetState(() {
                                   suggestions = [];
+                                  isSearching = false;
                                 });
                               }
                             },
                             onSubmitted: (value) {
+                              debounceTimer?.cancel();
                               if (suggestions.isNotEmpty) {
                                 _selectCity(suggestions.first);
                                 Navigator.pop(context);
@@ -1004,8 +1018,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 16),
 
+                        // Loading state
+                        if (isSearching)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ),
+                          ),
+
                         // Search Results
-                        if (suggestions.isNotEmpty)
+                        if (!isSearching && suggestions.isNotEmpty)
                           Flexible(
                             child: ListView.builder(
                               shrinkWrap: true,
@@ -1048,14 +1078,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   fontWeight: FontWeight.w500,
                                                 ),
                                               ),
-                                              if (city.state != null ||
-                                                  city.country.isNotEmpty)
+                                              if (city.subtitle.isNotEmpty)
                                                 Text(
-                                                  [
-                                                    if (city.state != null)
-                                                      city.state,
-                                                    city.country,
-                                                  ].join(', '),
+                                                  city.subtitle,
                                                   style: GoogleFonts.outfit(
                                                     color: Colors.white
                                                         .withOpacity(0.5),
@@ -1105,8 +1130,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(
                           height: MediaQuery.of(context).padding.bottom + 16,
                         ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -1158,7 +1182,14 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Use geocoding to find the location
+      // 1. Try fuzzy city search first (resolves newyork, typos, etc.)
+      final cityResults = await _weatherService.searchCities(query);
+      if (cityResults.isNotEmpty) {
+        await _selectCity(cityResults.first);
+        return;
+      }
+
+      // 2. Fallback to OS geocoding to find the location
       List<Location> locations = await locationFromAddress(query);
       if (locations.isNotEmpty) {
         final location = locations.first;

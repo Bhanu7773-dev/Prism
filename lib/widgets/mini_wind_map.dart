@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/wind_data_service.dart';
 import '../widgets/wind_particle_painter.dart';
 import '../screens/wind_map_screen.dart';
+import '../api_keys.dart';
 
 class MiniWindMap extends StatefulWidget {
   final double latitude;
@@ -136,7 +137,7 @@ class _MiniWindMapState extends State<MiniWindMap>
                 children: [
                   TileLayer(
                     urlTemplate:
-                        'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+                        'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=${ApiKeys.carto}',
                     subdomains: const ['a', 'b', 'c', 'd'],
                     userAgentPackageName: 'com.dark.prism.mini',
                   ),
@@ -166,7 +167,7 @@ class _MiniWindMapState extends State<MiniWindMap>
                     ]),
                     child: TileLayer(
                       urlTemplate:
-                          'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+                          'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png?key=${ApiKeys.carto}',
                       subdomains: const ['a', 'b', 'c', 'd'],
                       userAgentPackageName: 'com.dark.prism.mini',
                     ),

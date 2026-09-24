@@ -121,21 +121,149 @@ class WeatherService {
     }
   }
 
-  /// Search for city suggestions using OpenWeatherMap Geo API
+  /// Search for city suggestions with fuzzy matching (Photon OSM) and OpenWeatherMap fallback
+  /// Search for city suggestions with fuzzy matching in English and place relevance ranking
   Future<List<CityResult>> searchCities(String query) async {
-    if (query.trim().isEmpty) return [];
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty) return [];
 
-    final response = await http.get(
-      Uri.parse(
-        'https://api.openweathermap.org/geo/1.0/direct?q=$query&limit=5&appid=$_apiKey',
-      ),
-    );
+    // 1. Primary: Photon (Komoot / OpenStreetMap) with English forced & place ranking
+    try {
+      final encoded = Uri.encodeComponent(cleanQuery);
+      final response = await http
+          .get(
+            Uri.parse(
+              'https://photon.komoot.io/api/?q=$encoded&limit=10&osm_tag=place&lang=en',
+            ),
+            headers: {
+              'User-Agent': 'PrismWeatherApp/1.0 (com.dark.prism)',
+            },
+          )
+          .timeout(const Duration(seconds: 4));
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => CityResult.fromJson(json)).toList();
-    } else {
-      return [];
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final List<dynamic> features = data['features'] ?? [];
+
+        final scoredFeatures = <Map<String, dynamic>>[];
+        for (final f in features) {
+          if (f is Map<String, dynamic>) scoredFeatures.add(f);
+        }
+
+        // Sort by place importance: Country > City > Town > State > Village > Hamlet
+        scoredFeatures.sort((a, b) {
+          final propsA = (a['properties'] as Map<String, dynamic>?) ?? {};
+          final propsB = (b['properties'] as Map<String, dynamic>?) ?? {};
+          return _placeScore(propsB).compareTo(_placeScore(propsA));
+        });
+
+        final results = <CityResult>[];
+        final seen = <String>{};
+
+        for (final f in scoredFeatures) {
+          final city = CityResult.fromPhoton(f);
+          if (city.name.isEmpty) continue;
+
+          final props = (f['properties'] as Map<String, dynamic>?) ?? {};
+          final score = _placeScore(props);
+
+          // If we already have major matches, discard tiny hamlets & obscure neighbourhoods
+          if (results.isNotEmpty && score <= 15) {
+            continue;
+          }
+
+          final key =
+              '${city.name.toLowerCase()}_${city.state?.toLowerCase()}_${city.country.toLowerCase()}';
+          if (!seen.contains(key)) {
+            seen.add(key);
+            results.add(city);
+          }
+          if (results.length >= 6) break;
+        }
+        if (results.isNotEmpty) return results;
+      }
+    } catch (_) {
+      // Fall through to Open-Meteo / OpenWeatherMap
+    }
+
+    // 2. Secondary: Open-Meteo Geocoding (English, ranked by population)
+    try {
+      final encoded = Uri.encodeComponent(cleanQuery);
+      final response = await http
+          .get(
+            Uri.parse(
+              'https://geocoding-api.open-meteo.com/v1/search?name=$encoded&count=5&language=en&format=json',
+            ),
+          )
+          .timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final List<dynamic> list = data['results'] ?? [];
+        if (list.isNotEmpty) {
+          return list.map((item) {
+            final map = item as Map<String, dynamic>;
+            return CityResult(
+              name: (map['name'] ?? '').toString(),
+              state: map['admin1']?.toString(),
+              country: (map['country'] ?? '').toString(),
+              lat: (map['latitude'] as num).toDouble(),
+              lon: (map['longitude'] as num).toDouble(),
+              placeType: 'city',
+            );
+          }).toList();
+        }
+      }
+    } catch (_) {}
+
+    // 3. Fallback: OpenWeatherMap Geo API
+    try {
+      final encoded = Uri.encodeComponent(cleanQuery);
+      final response = await http
+          .get(
+            Uri.parse(
+              'https://api.openweathermap.org/geo/1.0/direct?q=$encoded&limit=5&appid=$_apiKey',
+            ),
+          )
+          .timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => CityResult.fromJson(json)).toList();
+      }
+    } catch (_) {}
+
+    return [];
+  }
+
+  static int _placeScore(Map<String, dynamic> props) {
+    final osmVal =
+        (props['osm_value'] ?? props['type'] ?? '').toString().toLowerCase();
+    switch (osmVal) {
+      case 'country':
+        return 100;
+      case 'city':
+        return 90;
+      case 'town':
+        return 80;
+      case 'state':
+      case 'province':
+      case 'administrative':
+        return 70;
+      case 'municipality':
+      case 'village':
+        return 40;
+      case 'suburb':
+      case 'district':
+        return 30;
+      case 'hamlet':
+        return 10;
+      case 'neighbourhood':
+      case 'locality':
+      case 'isolated_dwelling':
+        return 5;
+      default:
+        return 20;
     }
   }
 }
@@ -147,6 +275,7 @@ class CityResult {
   final String country;
   final double lat;
   final double lon;
+  final String? placeType;
 
   CityResult({
     required this.name,
@@ -154,6 +283,7 @@ class CityResult {
     required this.country,
     required this.lat,
     required this.lon,
+    this.placeType,
   });
 
   factory CityResult.fromJson(Map<String, dynamic> json) {
@@ -163,13 +293,56 @@ class CityResult {
       country: json['country'] ?? '',
       lat: (json['lat'] as num).toDouble(),
       lon: (json['lon'] as num).toDouble(),
+      placeType: 'city',
     );
   }
 
-  String get displayName {
-    if (state != null && state!.isNotEmpty) {
-      return '$name, $state, $country';
+  factory CityResult.fromPhoton(Map<String, dynamic> feature) {
+    final props = (feature['properties'] as Map<String, dynamic>?) ?? {};
+    final geometry = (feature['geometry'] as Map<String, dynamic>?) ?? {};
+    final coords = (geometry['coordinates'] as List<dynamic>?) ?? [];
+
+    final lon = (coords.isNotEmpty ? coords[0] as num : 0.0).toDouble();
+    final lat = (coords.length > 1 ? coords[1] as num : 0.0).toDouble();
+
+    final name = (props['name'] ?? props['city'] ?? '').toString();
+    final state = props['state']?.toString();
+    final country = (props['country'] ?? props['countrycode'] ?? '').toString();
+    final placeType = (props['osm_value'] ?? props['type'] ?? '').toString();
+
+    return CityResult(
+      name: name,
+      state: state,
+      country: country,
+      lat: lat,
+      lon: lon,
+      placeType: placeType,
+    );
+  }
+
+  String get subtitle {
+    final parts = <String>[];
+    if (state != null &&
+        state!.isNotEmpty &&
+        state!.toLowerCase() != country.toLowerCase()) {
+      parts.add(state!);
     }
-    return '$name, $country';
+    if (country.isNotEmpty && country.toLowerCase() != name.toLowerCase()) {
+      parts.add(country);
+    }
+    if (parts.isEmpty) {
+      if (placeType == 'country') return 'Country';
+      if (placeType == 'state') return 'State';
+      if (country.isNotEmpty) return country;
+    }
+    return parts.join(', ');
+  }
+
+  String get displayName {
+    final sub = subtitle;
+    if (sub.isNotEmpty && sub != 'Country') {
+      return '$name, $sub';
+    }
+    return name;
   }
 }

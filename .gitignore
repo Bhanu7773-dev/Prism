@@ -35,5 +35,11 @@ migrate_working_dir/
 /android/app/profile/
 /android/app/release/
 
-# Sensitive Files
+# Sensitive Files & Local Configs
 lib/api_keys.dart
+**/android/local.properties
+**/android/key.properties
+*.keystore
+*.jks
+.env*
+!.env.example

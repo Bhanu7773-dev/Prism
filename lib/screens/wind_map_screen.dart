@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import '../services/wind_data_service.dart';
 import '../services/weather_service.dart';
 import '../widgets/wind_particle_painter.dart';
+import '../api_keys.dart';
 
 class WindMapScreen extends StatefulWidget {
   const WindMapScreen({super.key});
@@ -217,7 +218,7 @@ class _WindMapScreenState extends State<WindMapScreen>
             children: [
               TileLayer(
                 urlTemplate:
-                    'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+                    'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=${ApiKeys.carto}',
                 subdomains: const ['a', 'b', 'c', 'd'],
                 userAgentPackageName: 'com.dark.prism',
               ),
@@ -248,7 +249,7 @@ class _WindMapScreenState extends State<WindMapScreen>
                 ]),
                 child: TileLayer(
                   urlTemplate:
-                      'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+                      'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png?key=${ApiKeys.carto}',
                   subdomains: const ['a', 'b', 'c', 'd'],
                   userAgentPackageName: 'com.dark.prism',
                 ),
